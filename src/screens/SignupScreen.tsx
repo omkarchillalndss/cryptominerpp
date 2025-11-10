@@ -17,22 +17,14 @@ export default function SignupScreen({ navigation }: any) {
   const [error, setError] = useState('');
 
   const create = async () => {
-    if (!address.trim()) {
-      setError('Please enter a wallet address');
-      return;
+    try {
+      await api.post('/api/users/signup', { walletAddress: address.trim() });
+      await setWalletAddress(address.trim());
+      await refreshBalance();
+      navigation.replace('Home');
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to create account');
     }
-    if (address.length < 10) {
-      setError('Please enter a valid wallet address');
-      return;
-    }
-    if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
-      Alert.alert('Invalid wallet address');
-      return;
-    }
-    await api.post('/api/users/signup', { walletAddress: address.trim() });
-    setWalletAddress(address.trim());
-    await refreshBalance();
-    navigation.replace('Home');
   };
 
   return (

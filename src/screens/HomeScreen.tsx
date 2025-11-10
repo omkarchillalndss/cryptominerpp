@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  Alert,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { useMining } from '../contexts/MiningContext';
@@ -19,6 +20,7 @@ export default function HomeScreen({ navigation }: any) {
     refreshBalance,
     walletAddress,
     walletBalance,
+    logout,
   } = useMining();
   const [popup, setPopup] = useState(false);
 
@@ -46,6 +48,25 @@ export default function HomeScreen({ navigation }: any) {
               style={styles.walletButton}
             >
               <Text style={styles.walletButtonText}>💼 Wallet</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={async () => {
+                try {
+                  await logout();
+                  navigation.reset({
+                    index: 0,
+                    routes: [{ name: 'Signup' }],
+                  });
+                } catch (error: any) {
+                  Alert.alert(
+                    'Cannot Logout',
+                    error.message || 'Cannot logout while mining is active',
+                  );
+                }
+              }}
+              style={[styles.walletButton, styles.logoutButton]}
+            >
+              <Text style={styles.walletButtonText}>🚪 Logout</Text>
             </TouchableOpacity>
           </View>
           <Text style={styles.mainTitle}>🪙 Crypto Miner</Text>
@@ -135,10 +156,16 @@ export default function HomeScreen({ navigation }: any) {
             )}
 
             {isMining && (
-              <View style={styles.centerContent}>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('Mining')}
+                activeOpacity={0.8}
+                style={styles.centerContent}
+              >
                 <Text style={styles.miningIcon}>⛏️</Text>
-                <Text style={styles.miningMessage}>Mining in progress...</Text>
-              </View>
+                <Text style={styles.miningMessage}>
+                  Mining in progress... Tap to view
+                </Text>
+              </TouchableOpacity>
             )}
           </View>
         </View>
@@ -212,6 +239,8 @@ const styles = StyleSheet.create({
   headerRight: {
     alignItems: 'flex-end',
     marginBottom: 16,
+    flexDirection: 'row',
+    gap: 8,
   },
   walletButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
@@ -220,6 +249,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 8,
     paddingHorizontal: 16,
+  },
+  logoutButton: {
+    backgroundColor: 'rgba(239, 68, 68, 0.2)',
+    borderColor: 'rgba(239, 68, 68, 0.4)',
   },
   walletButtonText: {
     color: '#fff',

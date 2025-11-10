@@ -14,7 +14,7 @@ type MiningStatus = 'active' | 'inactive';
 
 interface MiningContextType {
   walletAddress: string;
-  setWalletAddress: (addr: string) => void;
+  setWalletAddress: (addr: string) => Promise<void>;
   totalBalance: number;
   walletBalance: number;
   refreshBalance: () => Promise<void>;
@@ -23,10 +23,12 @@ interface MiningContextType {
   selectedDuration: number; // seconds
   remainingSeconds: number;
   liveTokens: number;
+  isLoading: boolean;
   startMining: (durationSeconds: number) => Promise<void>;
   stopMining: () => Promise<void>;
   upgradeMultiplier: () => Promise<void>;
   claimRewards: () => Promise<number>;
+  logout: () => Promise<void>;
 }
 
 const BASE_RATE = 0.01; // tokens/sec
@@ -49,7 +51,7 @@ export const useMining = () => useContext(MiningContext);
 export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [walletAddress, setWalletAddress] = useState('');
+  const [walletAddress, setWalletAddressState] = useState('');
   const [totalBalance, setTotalBalance] = useState(0);
   const [walletBalance, setWalletBalance] = useState(0);
   const [miningStatus, setMiningStatus] = useState<MiningStatus>('inactive');
@@ -57,15 +59,42 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
   const [selectedDuration, setSelectedDuration] = useState(0);
   const [remainingSeconds, setRemainingSeconds] = useState(0);
   const [liveTokens, setLiveTokens] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  // Wrapper to persist wallet address when set
+  const setWalletAddress = async (addr: string) => {
+    console.log('💼 Setting wallet address:', addr);
+    setWalletAddressState(addr);
+    // Persist immediately
+    await AsyncStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        walletAddress: addr,
+        miningStatus: 'inactive',
+        selectedDuration: 0,
+        multiplier: 1,
+        startTimestamp: Date.now(),
+        liveTokens: 0,
+        lastTick: Date.now(),
+      }),
+    );
+  };
+
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const appState = useRef<AppStateStatus>(AppState.currentState);
 
   const effectiveRate = useMemo(() => {
-    // NOTE: Per brief: Effective Rate = Base Rate ÷ Multiplier
-    // If you want boosts to increase reward, change to: BASE_RATE * currentMultiplier
-    return BASE_RATE / currentMultiplier;
+    // Correct formula: Effective Rate = Base Rate × Multiplier
+    // Example: 0.01 * 3 = 0.03 tokens/sec
+    return BASE_RATE * currentMultiplier;
   }, [currentMultiplier]);
+
+  const effectiveTokens = (elapsedSeconds: number, multiplier: number) => {
+    // Correct calculation: BASE_RATE * multiplier * seconds
+    // Example: 0.01 * 3 * 14400 = 432 tokens for 4 hours with 3x multiplier
+    const rate = BASE_RATE * multiplier;
+    return rate * elapsedSeconds;
+  };
 
   const persist = async (patch: Partial<Persisted> = {}) => {
     const data: Persisted = {
@@ -77,37 +106,102 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
       liveTokens,
       lastTick: Date.now(),
     };
-    await AsyncStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({ ...data, ...patch }),
-    );
+    const finalData = { ...data, ...patch };
+    console.log('💾 Persisting data:', finalData);
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(finalData));
   };
 
   const hydrate = async () => {
+    console.log('🔄 Hydrating app state...');
+
+    // Test backend connection
+    try {
+      const healthCheck = await api.get('/health');
+      console.log('✅ Backend is reachable:', healthCheck.data);
+    } catch (error) {
+      console.error('❌ Backend not reachable:', error);
+    }
+
     const raw = await AsyncStorage.getItem(STORAGE_KEY);
-    if (!raw) return;
+    if (!raw) {
+      console.log('❌ No saved state found');
+      setIsLoading(false);
+      return;
+    }
     try {
       const saved: Persisted = JSON.parse(raw);
-      setWalletAddress(saved.walletAddress || '');
-      setMiningStatus(saved.miningStatus);
-      setSelectedDuration(saved.selectedDuration);
-      setCurrentMultiplier(saved.multiplier || 1);
-      setLiveTokens(saved.liveTokens || 0);
+      const walletAddr = saved.walletAddress || '';
+      console.log('💼 Wallet address found:', walletAddr);
+      setWalletAddressState(walletAddr);
 
-      if (saved.miningStatus === 'active') {
-        const elapsed = Math.floor((Date.now() - saved.startTimestamp) / 1000);
-        const rem = Math.max(saved.selectedDuration - elapsed, 0);
-        setRemainingSeconds(rem);
-        if (rem > 0)
-          tickStart(
-            saved.startTimestamp,
-            saved.selectedDuration,
-            saved.multiplier,
-            saved.liveTokens,
+      // If wallet address exists, sync with backend
+      if (walletAddr) {
+        try {
+          console.log('🌐 Fetching user data from backend...');
+          const res = await api.get(`/api/users/${walletAddr}`);
+          console.log('✅ Backend response:', res.data);
+          setTotalBalance(res.data.totalBalance ?? 0);
+          setWalletBalance(
+            res.data.walletBalance ?? res.data.totalBalance ?? 0,
           );
-        else setMiningStatus('inactive');
+
+          // Sync mining status from backend
+          if (res.data.miningStatus === 'active' && res.data.miningStartTime) {
+            console.log('⛏️ Active mining session found!');
+            const startTs = new Date(res.data.miningStartTime).getTime();
+            const duration = (res.data.selectedHour ?? 1) * 3600;
+            const multiplier = res.data.multiplier ?? 1;
+            const elapsed = Math.floor((Date.now() - startTs) / 1000);
+            const rem = Math.max(duration - elapsed, 0);
+
+            setMiningStatus('active');
+            setSelectedDuration(duration);
+            setRemainingSeconds(rem);
+            setCurrentMultiplier(multiplier);
+
+            if (rem > 0) {
+              const elapsedTokens = effectiveTokens(elapsed, multiplier);
+              setLiveTokens(elapsedTokens);
+              tickStart(startTs, duration, multiplier, 0);
+            } else {
+              setMiningStatus('inactive');
+            }
+          } else {
+            // Not mining on backend, use local state
+            setMiningStatus(saved.miningStatus);
+            setSelectedDuration(saved.selectedDuration);
+            setCurrentMultiplier(saved.multiplier || 1);
+            setLiveTokens(saved.liveTokens || 0);
+          }
+        } catch (error) {
+          console.error('Failed to sync with backend:', error);
+          // Fallback to local state if backend fails
+          setMiningStatus(saved.miningStatus);
+          setSelectedDuration(saved.selectedDuration);
+          setCurrentMultiplier(saved.multiplier || 1);
+          setLiveTokens(saved.liveTokens || 0);
+
+          if (saved.miningStatus === 'active') {
+            const elapsed = Math.floor(
+              (Date.now() - saved.startTimestamp) / 1000,
+            );
+            const rem = Math.max(saved.selectedDuration - elapsed, 0);
+            setRemainingSeconds(rem);
+            if (rem > 0)
+              tickStart(
+                saved.startTimestamp,
+                saved.selectedDuration,
+                saved.multiplier,
+                saved.liveTokens,
+              );
+            else setMiningStatus('inactive');
+          }
+        }
       }
-    } catch {}
+    } catch {
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -121,6 +215,16 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
     startTokens: number,
   ) => {
     if (intervalRef.current) clearInterval(intervalRef.current);
+
+    // Set initial values immediately
+    const now = Date.now();
+    const elapsed = Math.floor((now - startTs) / 1000);
+    const rem = Math.max(duration - elapsed, 0);
+    setRemainingSeconds(rem);
+    const elapsedTokens = effectiveTokens(elapsed, multiplier);
+    setLiveTokens(startTokens + elapsedTokens);
+
+    // Then start the interval
     intervalRef.current = setInterval(() => {
       const now = Date.now();
       const elapsed = Math.floor((now - startTs) / 1000);
@@ -140,20 +244,47 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
     }, 1000);
   };
 
-  const effectiveTokens = (elapsedSeconds: number, multiplier: number) => {
-    const rate = BASE_RATE / multiplier; // per brief
-    return rate * elapsedSeconds;
-  };
-
   const refreshBalance = async () => {
     if (!walletAddress) return;
     const res = await api.get(`/api/users/${walletAddress}`);
     setTotalBalance(res.data.totalBalance ?? 0);
     setWalletBalance(res.data.walletBalance ?? res.data.totalBalance ?? 0);
+
+    // Fetch mining status from database
+    if (res.data.miningStatus) {
+      setMiningStatus(res.data.miningStatus);
+      setCurrentMultiplier(res.data.multiplier ?? 1);
+
+      // If mining is active, sync with server
+      if (res.data.miningStatus === 'active' && res.data.miningStartTime) {
+        const startTs = new Date(res.data.miningStartTime).getTime();
+        const duration = (res.data.selectedHour ?? 1) * 3600;
+        const elapsed = Math.floor((Date.now() - startTs) / 1000);
+        const rem = Math.max(duration - elapsed, 0);
+
+        setSelectedDuration(duration);
+        setRemainingSeconds(rem);
+
+        if (rem > 0) {
+          const elapsedTokens = effectiveTokens(
+            elapsed,
+            res.data.multiplier ?? 1,
+          );
+          setLiveTokens(elapsedTokens);
+          tickStart(startTs, duration, res.data.multiplier ?? 1, 0);
+        } else {
+          setMiningStatus('inactive');
+        }
+      }
+    }
   };
 
   const startMining = async (durationSeconds: number) => {
     if (!walletAddress) throw new Error('No wallet');
+
+    // Use client timestamp to avoid network delay issues
+    const clientStartTs = Date.now();
+
     // Backend records authoritative session
     const res = await api.post('/api/mining/start', {
       walletAddress,
@@ -161,14 +292,14 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
       multiplier: currentMultiplier,
     });
 
-    const startTs = new Date(res.data.miningStartTime).getTime();
+    // Use client timestamp for immediate accuracy
     setSelectedDuration(durationSeconds);
     setRemainingSeconds(durationSeconds);
     setLiveTokens(0);
     setMiningStatus('active');
-    tickStart(startTs, durationSeconds, currentMultiplier, 0);
+    tickStart(clientStartTs, durationSeconds, currentMultiplier, 0);
     await persist({
-      startTimestamp: startTs,
+      startTimestamp: clientStartTs,
       selectedDuration: durationSeconds,
       miningStatus: 'active',
       multiplier: currentMultiplier,
@@ -179,8 +310,9 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
   const stopMining = async () => {
     if (intervalRef.current) clearInterval(intervalRef.current);
     setMiningStatus('inactive');
+    setCurrentMultiplier(1); // Reset multiplier to 1
     await api.post('/api/mining/stop', { walletAddress });
-    await persist({ miningStatus: 'inactive' });
+    await persist({ miningStatus: 'inactive', multiplier: 1 });
   };
 
   const upgradeMultiplier = async () => {
@@ -197,9 +329,36 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
     const { awarded } = res.data;
     setLiveTokens(0);
     setMiningStatus('inactive');
+    setCurrentMultiplier(1); // Reset multiplier to 1 after claiming
     await refreshBalance();
-    await persist({ miningStatus: 'inactive', liveTokens: 0 });
+    await persist({ miningStatus: 'inactive', liveTokens: 0, multiplier: 1 });
     return awarded as number;
+  };
+
+  const logout = async () => {
+    // Check if user is currently mining
+    if (miningStatus === 'active') {
+      console.log('❌ Cannot logout while mining is active');
+      throw new Error('Cannot logout while mining is active');
+    }
+
+    console.log('🚪 Logging out...');
+    // Stop any intervals
+    if (intervalRef.current) clearInterval(intervalRef.current);
+
+    // Clear only local state (backend balance remains intact)
+    setWalletAddressState('');
+    setTotalBalance(0);
+    setWalletBalance(0);
+    setMiningStatus('inactive');
+    setCurrentMultiplier(1);
+    setSelectedDuration(0);
+    setRemainingSeconds(0);
+    setLiveTokens(0);
+
+    // Clear AsyncStorage
+    await AsyncStorage.removeItem(STORAGE_KEY);
+    console.log('✅ Logged out successfully');
   };
 
   useEffect(() => {
@@ -226,10 +385,12 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
     selectedDuration,
     remainingSeconds,
     liveTokens,
+    isLoading,
     startMining,
     stopMining,
     upgradeMultiplier,
     claimRewards,
+    logout,
   };
 
   return (

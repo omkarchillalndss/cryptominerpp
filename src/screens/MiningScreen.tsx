@@ -57,6 +57,15 @@ export default function MiningScreen({ navigation }: any) {
         style={styles.scrollView}
         contentContainerStyle={styles.content}
       >
+        {/* Back Button */}
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.backButtonText}>Back</Text>
+        </TouchableOpacity>
+
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.miningIcon}>⛏️</Text>
@@ -144,7 +153,7 @@ export default function MiningScreen({ navigation }: any) {
               end={{ x: 1, y: 0 }}
               style={styles.button}
             >
-              <Text style={styles.buttonText}>⚡ Change Multiplier</Text>
+              <Text style={styles.buttonText}>⚡ Upgrade Multiplier</Text>
             </LinearGradient>
           </TouchableOpacity>
 
@@ -201,6 +210,21 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingTop: 32,
     zIndex: 10,
+  },
+  backButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderRadius: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    alignSelf: 'flex-start',
+    marginBottom: 16,
+  },
+  backButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
   header: {
     alignItems: 'center',

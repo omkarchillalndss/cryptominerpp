@@ -3,7 +3,6 @@ import { User } from '../models/User';
 
 export const signup = async (req: Request, res: Response) => {
   const { walletAddress } = req.body;
-  if (!/^0x[a-fA-F0-9]{40}$/.test(walletAddress)) return res.status(400).json({ message: 'Invalid wallet address' });
   const existing = await User.findOne({ walletAddress });
   if (existing) return res.json(existing);
   const user = await User.create({ walletAddress, totalBalance: 0 });
@@ -14,5 +13,24 @@ export const getUser = async (req: Request, res: Response) => {
   const { walletAddress } = req.params;
   const user = await User.findOne({ walletAddress });
   if (!user) return res.status(404).json({ message: 'User not found' });
-  res.json(user);
+  
+  // Check if user has an active mining session
+  const { MiningSession } = await import('../models/MiningSession');
+  const activeSession = await MiningSession.findOne({
+    walletAddress,
+    status: 'mining',
+  }).sort({ miningStartTime: -1 });
+  
+  const response: any = {
+    ...user.toObject(),
+    miningStatus: activeSession ? 'active' : 'inactive',
+  };
+  
+  if (activeSession) {
+    response.miningStartTime = activeSession.miningStartTime;
+    response.selectedHour = activeSession.selectedHour;
+    response.multiplier = activeSession.multiplier;
+  }
+  
+  res.json(response);
 };

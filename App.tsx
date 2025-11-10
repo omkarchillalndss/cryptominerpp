@@ -14,12 +14,31 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 const Stack = createStackNavigator();
 
 function Root() {
-  const { walletAddress } = useMining();
+  const { walletAddress, isLoading, miningStatus } = useMining();
+  const [showInitialSplash, setShowInitialSplash] = useState(true);
+
+  // Show splash screen on first load
+  if (showInitialSplash) {
+    return <SplashScreen onFinish={() => setShowInitialSplash(false)} />;
+  }
+
+  // Show loading splash while hydrating
+  if (isLoading) {
+    return <SplashScreen onFinish={() => {}} />;
+  }
+
+  // Determine initial route based on wallet and mining status
+  const getInitialRoute = () => {
+    if (!walletAddress) return 'Signup';
+    if (miningStatus === 'active') return 'Mining';
+    return 'Home';
+  };
+
   return (
     <NavigationContainer>
       <Stack.Navigator
         screenOptions={{ headerShown: false }}
-        initialRouteName={walletAddress ? 'Home' : 'Signup'}
+        initialRouteName={getInitialRoute()}
       >
         <Stack.Screen name="Signup" component={SignupScreen} />
         <Stack.Screen name="Home" component={HomeScreen} />
@@ -33,16 +52,6 @@ function Root() {
 }
 
 export default function App() {
-  const [showSplash, setShowSplash] = useState(true);
-
-  if (showSplash) {
-    return (
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <SplashScreen onFinish={() => setShowSplash(false)} />
-      </GestureHandlerRootView>
-    );
-  }
-
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <MiningProvider>

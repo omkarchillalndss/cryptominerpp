@@ -199,9 +199,7 @@ export const DurationPopup: React.FC<{
                   end={{ x: 1, y: 0 }}
                   style={styles.startButton}
                 >
-                  <Text style={styles.startButtonText}>
-                    {requiresAd ? '📺 Watch Ad & Start' : '🚀 Start Mining'}
-                  </Text>
+                  <Text style={styles.startButtonText}>🚀 Start Mining</Text>
                 </LinearGradient>
               </TouchableOpacity>
             </View>
@@ -367,6 +365,7 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 12,
     paddingVertical: 14,
+    paddingHorizontal: 20,
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
