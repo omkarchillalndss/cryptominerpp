@@ -5,8 +5,8 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  SafeAreaView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import { useMining } from '../contexts/MiningContext';
 import { ProgressBar } from '../components/ProgressBar';
@@ -61,11 +61,17 @@ export default function MiningScreen({ navigation }: any) {
         >
           {/* Back Button */}
           <TouchableOpacity
-            onPress={() => navigation.goBack()}
+            onPress={() => {
+              if (navigation.canGoBack()) {
+                navigation.goBack();
+              } else {
+                navigation.navigate('Home');
+              }
+            }}
             style={styles.backButton}
             activeOpacity={0.8}
           >
-            <Text style={styles.backButtonText}>Back</Text>
+            <Text style={styles.backButtonText}>← Back</Text>
           </TouchableOpacity>
 
           {/* Header */}
@@ -362,7 +368,7 @@ const styles = StyleSheet.create({
   },
   tokensCard: {
     borderRadius: 16,
-    padding: 24,
+    padding: 10,
     marginBottom: 24,
     position: 'relative',
     overflow: 'hidden',

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { MiningProvider, useMining } from './src/contexts/MiningContext';
 import SplashScreen from './src/screens/SplashScreen';
 import SignupScreen from './src/screens/SignupScreen';
@@ -51,10 +52,12 @@ function Root() {
 
 export default function App() {
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <MiningProvider>
-        <Root />
-      </MiningProvider>
-    </GestureHandlerRootView>
+    <SafeAreaProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <MiningProvider>
+          <Root />
+        </MiningProvider>
+      </GestureHandlerRootView>
+    </SafeAreaProvider>
   );
 }
