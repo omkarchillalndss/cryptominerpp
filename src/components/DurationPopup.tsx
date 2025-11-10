@@ -1,92 +1,13 @@
-// import React from 'react';
-// import { Modal, View, TouchableOpacity, Text } from 'react-native';
-
-// const DURATIONS = [
-//   { label: '1h', value: 3600 },
-//   { label: '2h', value: 7200 },
-//   { label: '4h', value: 14400 },
-//   { label: '12h', value: 43200 },
-//   { label: '24h', value: 86400 },
-// ];
-
-// export const DurationPopup: React.FC<{
-//   visible: boolean;
-//   currentMultiplier: number;
-//   onClose: () => void;
-//   onUpgrade: () => void;
-//   onStart: (seconds: number) => void;
-// }> = ({ visible, currentMultiplier, onClose, onUpgrade, onStart }) => {
-//   return (
-//     <Modal visible={visible} transparent animationType="slide">
-//       <View
-//         style={{
-//           flex: 1,
-//           backgroundColor: 'rgba(0,0,0,0.4)',
-//           justifyContent: 'center',
-//           padding: 20,
-//         }}
-//       >
-//         <View
-//           style={{ backgroundColor: '#fff', borderRadius: 16, padding: 16 }}
-//         >
-//           <Text style={{ fontSize: 18, fontWeight: '700' }}>
-//             Select Duration
-//           </Text>
-//           <Text style={{ marginVertical: 8 }}>
-//             Multiplier: {currentMultiplier}×
-//           </Text>
-//           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-//             {DURATIONS.map(d => (
-//               <TouchableOpacity
-//                 key={d.label}
-//                 onPress={() => onStart(d.value)}
-//                 style={{
-//                   padding: 12,
-//                   borderWidth: 1,
-//                   borderColor: '#ddd',
-//                   borderRadius: 12,
-//                   margin: 4,
-//                 }}
-//               >
-//                 <Text>{d.label}</Text>
-//               </TouchableOpacity>
-//             ))}
-//           </View>
-//           <View
-//             style={{
-//               flexDirection: 'row',
-//               justifyContent: 'space-between',
-//               marginTop: 16,
-//             }}
-//           >
-//             <TouchableOpacity onPress={onUpgrade} style={{ padding: 12 }}>
-//               <Text>Upgrade Multiplier</Text>
-//             </TouchableOpacity>
-//             <TouchableOpacity onPress={onClose} style={{ padding: 12 }}>
-//               <Text>Close</Text>
-//             </TouchableOpacity>
-//           </View>
-//         </View>
-//       </View>
-//     </Modal>
-//   );
-// };
-
-// src/components/DurationPopup.tsx
-
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Modal,
   View,
   TouchableOpacity,
   Text,
   StyleSheet,
-  SafeAreaView,
+  ScrollView,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { BlurView } from '@react-native-community/blur';
-import { NeonButton } from '../ui/NeonButton';
-import { theme } from '../ui/theme';
 
 const DURATIONS = [
   { h: 1, label: '1 Hour', seconds: 3600 },
@@ -114,274 +35,348 @@ export const DurationPopup: React.FC<{
   onUpgrade: () => void;
   onStart: (seconds: number) => void;
 }> = ({ visible, currentMultiplier, onClose, onUpgrade, onStart }) => {
-  const [selected, setSelected] = React.useState<number>(1);
+  const [selectedDuration, setSelectedDuration] = useState(1);
+  const [selectedMultiplier, setSelectedMultiplier] =
+    useState(currentMultiplier);
 
-  // reward math
-  const seconds = selected * 3600;
-  const effectiveRate = BASE_RATE / currentMultiplier;
+  const seconds = selectedDuration * 3600;
+  const effectiveRate = BASE_RATE / selectedMultiplier;
   const reward = seconds * effectiveRate;
+  const requiresAd = selectedMultiplier > currentMultiplier;
+
+  const handleStart = () => {
+    if (requiresAd) {
+      onUpgrade();
+    } else {
+      onStart(seconds);
+    }
+  };
 
   return (
     <Modal visible={visible} transparent animationType="fade">
-      <SafeAreaView style={styles.overlay}>
-        <View style={styles.centerWrap}>
-          {/* BLURRED GLASS PANEL */}
-          <View style={styles.glass}>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Text style={{ fontSize: 20, color: 'white' }}>✕</Text>
-            </TouchableOpacity>
-
-            <BlurView
-              style={StyleSheet.absoluteFill}
-              blurAmount={24}
-              blurType="light"
-            />
-
-            {/* Gradient background */}
-            <LinearGradient
-              colors={['rgba(85,100,255,0.30)', 'rgba(50,12,170,0.30)']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={StyleSheet.absoluteFill}
-            />
-
-            <View style={styles.content}>
-              {/* HEADER ICON */}
-              <Text style={styles.bigIcon}>⚙️</Text>
+      <View style={styles.overlay}>
+        <View style={styles.modalContainer}>
+          <LinearGradient
+            colors={['#581c87', '#1e3a8a', '#312e81']}
+            style={styles.modalContent}
+          >
+            {/* Header */}
+            <View style={styles.header}>
+              <Text style={styles.icon}>⚙️</Text>
               <Text style={styles.title}>Select Mining Duration</Text>
-              <Text style={styles.sub}>
+              <Text style={styles.subtitle}>
                 Choose how long you want to mine and select a multiplier
               </Text>
+            </View>
 
-              {/* DURATION SECTION */}
-              <Text style={styles.sectionLabel}>⏱️ Duration</Text>
-              <View style={styles.grid}>
-                {DURATIONS.map(d => {
-                  const active = selected === d.h;
-                  return (
-                    <TouchableOpacity
-                      key={d.h}
-                      onPress={() => setSelected(d.h)}
-                      style={[
-                        styles.optionBtn,
-                        active ? styles.optionActive : styles.optionIdle,
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.optionTxt,
-                          active && styles.optionTxtActive,
-                        ]}
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {/* Duration Section */}
+              <View style={styles.section}>
+                <Text style={styles.sectionLabel}>⏱️ Duration</Text>
+                <View style={styles.grid}>
+                  {DURATIONS.map(d => {
+                    const active = selectedDuration === d.h;
+                    return (
+                      <TouchableOpacity
+                        key={d.h}
+                        onPress={() => setSelectedDuration(d.h)}
+                        activeOpacity={0.8}
                       >
-                        {d.label}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
+                        {active ? (
+                          <LinearGradient
+                            colors={['#3b82f6', '#9333ea']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                            style={styles.optionButton}
+                          >
+                            <Text style={styles.optionTextActive}>
+                              {d.label}
+                            </Text>
+                          </LinearGradient>
+                        ) : (
+                          <View style={styles.optionButtonInactive}>
+                            <Text style={styles.optionText}>{d.label}</Text>
+                          </View>
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
               </View>
 
-              {/* MULTIPLIER SECTION */}
-              <Text style={[styles.sectionLabel, { marginTop: 12 }]}>
-                ⚡ Multiplier
-              </Text>
-              <View style={styles.grid}>
-                {MULTIPLIER_OPTIONS.map(m => {
-                  const active = m.value === currentMultiplier;
-                  const locked = m.value > currentMultiplier;
-                  return (
-                    <TouchableOpacity
-                      disabled={active}
-                      key={m.value}
-                      onPress={() => locked && onUpgrade()}
-                      style={[
-                        styles.optionBtn,
-                        active
-                          ? styles.multActive
-                          : locked
-                          ? styles.multLocked
-                          : styles.multIdle,
-                      ]}
-                    >
-                      <View style={{ alignItems: 'center' }}>
-                        <Text
-                          style={[
-                            styles.optionTxt,
-                            active && styles.optionTxtActive,
-                          ]}
-                        >
-                          {m.label}
-                        </Text>
-                        {locked && <Text style={styles.adBadge}>📺 Ad</Text>}
-                      </View>
-                    </TouchableOpacity>
-                  );
-                })}
+              {/* Multiplier Section */}
+              <View style={styles.section}>
+                <Text style={styles.sectionLabel}>⚡ Multiplier</Text>
+                <View style={styles.grid}>
+                  {MULTIPLIER_OPTIONS.map(m => {
+                    const active = selectedMultiplier === m.value;
+                    const locked = m.value > currentMultiplier;
+                    return (
+                      <TouchableOpacity
+                        key={m.value}
+                        onPress={() =>
+                          !locked && setSelectedMultiplier(m.value)
+                        }
+                        activeOpacity={0.8}
+                        disabled={locked}
+                      >
+                        {active ? (
+                          <LinearGradient
+                            colors={['#fbbf24', '#f97316']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                            style={styles.optionButton}
+                          >
+                            <Text style={styles.optionTextActive}>
+                              {m.label}
+                            </Text>
+                            {m.requiresAd && (
+                              <Text style={styles.adBadge}>📺 Ad</Text>
+                            )}
+                          </LinearGradient>
+                        ) : (
+                          <View
+                            style={[
+                              styles.optionButtonInactive,
+                              locked && styles.optionButtonLocked,
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.optionText,
+                                locked && styles.optionTextLocked,
+                              ]}
+                            >
+                              {m.label}
+                            </Text>
+                            {m.requiresAd && (
+                              <Text style={styles.adBadge}>📺 Ad</Text>
+                            )}
+                          </View>
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+                {requiresAd && (
+                  <Text style={styles.adNote}>
+                    📺 Watch an ad to unlock this multiplier
+                  </Text>
+                )}
               </View>
 
-              {/* REWARD BOX */}
+              {/* Reward Box */}
               <View style={styles.rewardBox}>
                 <View style={styles.rewardRow}>
                   <Text style={styles.rewardLabel}>Estimated Reward:</Text>
-                  <Text style={styles.rewardVal}>
+                  <Text style={styles.rewardValue}>
                     {reward.toFixed(4)} tokens
                   </Text>
                 </View>
                 <View style={styles.rewardRow}>
                   <Text style={styles.rewardLabel}>Effective Rate:</Text>
-                  <Text style={styles.rewardSmall}>
+                  <Text style={styles.rewardValueSmall}>
                     {effectiveRate.toFixed(6)} tokens/sec
                   </Text>
                 </View>
               </View>
+            </ScrollView>
 
-              {/* BUTTON ROW */}
-              <View style={styles.btnRow}>
-                <NeonButton
-                  title="Cancel"
-                  variant="outline"
-                  onPress={onClose}
-                  style={{ flex: 1 }}
-                />
-                <View style={{ width: 12 }} />
-                <NeonButton
-                  title="Start Mining"
-                  onPress={() => onStart(seconds)}
-                  style={{ flex: 1, backgroundColor: 'transparent' }}
-                />
-              </View>
+            {/* Buttons */}
+            <View style={styles.buttonRow}>
+              <TouchableOpacity
+                onPress={onClose}
+                style={styles.cancelButton}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={handleStart} activeOpacity={0.8}>
+                <LinearGradient
+                  colors={['#16a34a', '#059669']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.startButton}
+                >
+                  <Text style={styles.startButtonText}>
+                    {requiresAd ? '📺 Watch Ad & Start' : '🚀 Start Mining'}
+                  </Text>
+                </LinearGradient>
+              </TouchableOpacity>
             </View>
-          </View>
+          </LinearGradient>
         </View>
-      </SafeAreaView>
+      </View>
     </Modal>
   );
 };
+
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.50)',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 16,
+    padding: 16,
   },
-  centerWrap: {
+  modalContainer: {
     width: '100%',
-    maxWidth: 400,
+    maxWidth: 448,
+    maxHeight: '90%',
   },
-  glass: {
+  modalContent: {
     borderRadius: 20,
-    overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.25)',
-    elevation: 12,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 20 },
+    shadowOpacity: 0.5,
+    shadowRadius: 40,
+    elevation: 20,
   },
-  content: {
-    padding: 20,
+  header: {
+    alignItems: 'center',
+    marginBottom: 24,
   },
-  bigIcon: {
-    fontSize: 42,
-    textAlign: 'center',
-    marginBottom: 10,
+  icon: {
+    fontSize: 48,
+    marginBottom: 12,
   },
   title: {
-    fontSize: 22,
-    color: 'white',
-    fontWeight: '900',
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#fff',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#e9d5ff',
     textAlign: 'center',
   },
-  sub: {
-    textAlign: 'center',
-    color: 'rgba(255,255,255,0.75)',
-    marginVertical: 6,
+  section: {
+    marginBottom: 24,
   },
   sectionLabel: {
-    marginTop: 12,
-    marginBottom: 6,
-    color: 'rgba(255,255,255,0.75)',
+    fontSize: 14,
+    color: '#e9d5ff',
     fontWeight: '700',
-    fontSize: 15,
+    marginBottom: 12,
   },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
-    marginBottom: 6,
   },
-  optionBtn: {
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 14,
+  optionButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    minWidth: 80,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  optionButtonInactive: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    minWidth: 80,
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderWidth: 1,
-    marginRight: 8,
-    marginBottom: 8,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
-  optionIdle: {
-    borderColor: 'rgba(255,255,255,0.35)',
-    backgroundColor: 'rgba(255,255,255,0.08)',
+  optionButtonLocked: {
+    opacity: 0.5,
   },
-  optionActive: {
-    borderColor: 'transparent',
-    backgroundColor: 'rgba(137,99,255,0.85)',
-  },
-  optionTxt: {
+  optionText: {
+    color: '#fff',
+    fontSize: 14,
     fontWeight: '700',
-    color: 'rgba(255,255,255,0.75)',
   },
-  optionTxtActive: {
-    color: 'white',
+  optionTextActive: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '700',
   },
-
-  multIdle: {
-    borderColor: 'rgba(255,255,255,0.35)',
-    backgroundColor: 'rgba(255,255,255,0.08)',
-  },
-  multLocked: {
-    borderColor: 'rgba(255,255,255,0.35)',
-    backgroundColor: 'rgba(255,255,255,0.10)',
-  },
-  multActive: {
-    borderColor: 'transparent',
-    backgroundColor: '#FFC245',
+  optionTextLocked: {
+    color: 'rgba(255, 255, 255, 0.5)',
   },
   adBadge: {
     fontSize: 10,
-    marginTop: 2,
-    color: '#FFD54A',
+    color: '#fff',
+    marginTop: 4,
   },
-
+  adNote: {
+    fontSize: 12,
+    color: '#e9d5ff',
+    marginTop: 8,
+  },
   rewardBox: {
-    marginTop: 10,
-    backgroundColor: 'rgba(255,255,255,0.10)',
-    borderRadius: 14,
+    backgroundColor: 'rgba(59, 130, 246, 0.2)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.25)',
-    padding: 12,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
   },
   rewardRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 4,
+    marginBottom: 8,
   },
   rewardLabel: {
-    color: 'rgba(255,255,255,0.75)',
+    fontSize: 12,
+    color: '#e9d5ff',
   },
-  rewardVal: {
-    color: '#FFC245',
-    fontWeight: '800',
-  },
-  rewardSmall: {
-    color: 'white',
+  rewardValue: {
+    fontSize: 14,
+    color: '#fbbf24',
     fontWeight: '700',
   },
-
-  btnRow: {
-    flexDirection: 'row',
-    marginTop: 16,
+  rewardValueSmall: {
+    fontSize: 12,
+    color: '#fff',
+    fontWeight: '700',
   },
-  closeBtn: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    padding: 6,
+  buttonRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  cancelButton: {
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  startButton: {
+    flex: 1,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  startButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
