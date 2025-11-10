@@ -1,45 +1,40 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import { MiningProvider, useMining } from './src/contexts/MiningContext';
+import SignupScreen from './src/screens/SignupScreen';
+import HomeScreen from './src/screens/HomeScreen';
+import MiningScreen from './src/screens/MiningScreen';
+import ClaimScreen from './src/screens/ClaimScreen';
+import AdScreen from './src/screens/AdScreen';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import { NewAppScreen } from '@react-native/new-app-screen';
-import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
-import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+const Stack = createStackNavigator();
 
-function App() {
-  const isDarkMode = useColorScheme() === 'dark';
-
+function Root() {
+  const { walletAddress } = useMining();
   return (
-    <SafeAreaProvider>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <AppContent />
-    </SafeAreaProvider>
+    <NavigationContainer>
+      <Stack.Navigator
+        screenOptions={{ headerShown: false }}
+        initialRouteName={walletAddress ? 'Home' : 'Signup'}
+      >
+        <Stack.Screen name="Signup" component={SignupScreen} />
+        <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name="Mining" component={MiningScreen} />
+        <Stack.Screen name="Claim" component={ClaimScreen} />
+        <Stack.Screen name="Ad" component={AdScreen} />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
 
-function AppContent() {
-  const safeAreaInsets = useSafeAreaInsets();
-
+export default function App() {
   return (
-    <View style={styles.container}>
-      <NewAppScreen
-        templateFileName="App.tsx"
-        safeAreaInsets={safeAreaInsets}
-      />
-    </View>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <MiningProvider>
+        <Root />
+      </MiningProvider>
+    </GestureHandlerRootView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});
-
-export default App;
