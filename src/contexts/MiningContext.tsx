@@ -81,6 +81,7 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const syncIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const appState = useRef<AppStateStatus>(AppState.currentState);
 
   const effectiveRate = useMemo(() => {
@@ -207,6 +208,69 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     hydrate();
   }, []);
+
+  // Real-time sync with backend every 10 seconds
+  useEffect(() => {
+    if (!walletAddress) return;
+
+    const syncWithBackend = async () => {
+      try {
+        const res = await api.get(`/api/users/${walletAddress}`);
+
+        // Update balance
+        setTotalBalance(res.data.totalBalance ?? 0);
+        setWalletBalance(res.data.walletBalance ?? res.data.totalBalance ?? 0);
+
+        // Sync mining status
+        if (res.data.miningStatus === 'active' && res.data.miningStartTime) {
+          const startTs = new Date(res.data.miningStartTime).getTime();
+          const duration = (res.data.selectedHour ?? 1) * 3600;
+          const multiplier = res.data.multiplier ?? 1;
+          const elapsed = Math.floor((Date.now() - startTs) / 1000);
+          const rem = Math.max(duration - elapsed, 0);
+
+          // Only update if mining status changed or multiplier changed
+          if (miningStatus !== 'active' || currentMultiplier !== multiplier) {
+            console.log('🔄 Syncing mining state from backend...');
+            setMiningStatus('active');
+            setSelectedDuration(duration);
+            setRemainingSeconds(rem);
+            setCurrentMultiplier(multiplier);
+
+            if (rem > 0) {
+              const elapsedTokens = effectiveTokens(elapsed, multiplier);
+              setLiveTokens(elapsedTokens);
+              tickStart(startTs, duration, multiplier, 0);
+            } else {
+              setMiningStatus('inactive');
+            }
+          }
+        } else if (
+          res.data.miningStatus === 'inactive' &&
+          miningStatus === 'active'
+        ) {
+          // Backend says mining stopped, sync local state
+          console.log('🔄 Mining stopped on backend, syncing...');
+          if (intervalRef.current) clearInterval(intervalRef.current);
+          setMiningStatus('inactive');
+          setLiveTokens(0);
+          setCurrentMultiplier(1);
+        }
+      } catch (error) {
+        console.error('❌ Failed to sync with backend:', error);
+      }
+    };
+
+    // Initial sync
+    syncWithBackend();
+
+    // Sync every 10 seconds
+    syncIntervalRef.current = setInterval(syncWithBackend, 10000);
+
+    return () => {
+      if (syncIntervalRef.current) clearInterval(syncIntervalRef.current);
+    };
+  }, [walletAddress, miningStatus, currentMultiplier]);
 
   const tickStart = (
     startTs: number,
@@ -343,8 +407,9 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
     }
 
     console.log('🚪 Logging out...');
-    // Stop any intervals
+    // Stop all intervals
     if (intervalRef.current) clearInterval(intervalRef.current);
+    if (syncIntervalRef.current) clearInterval(syncIntervalRef.current);
 
     // Clear only local state (backend balance remains intact)
     setWalletAddressState('');

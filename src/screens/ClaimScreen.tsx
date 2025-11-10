@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Alert, StyleSheet, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  Alert,
+  StyleSheet,
+  TouchableOpacity,
+  SafeAreaView,
+} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { useMining } from '../contexts/MiningContext';
 
@@ -20,61 +27,67 @@ export default function ClaimScreen({ navigation }: any) {
   }, []);
 
   return (
-    <LinearGradient
-      colors={['#064e3b', '#065f46', '#14b8a6']}
-      style={styles.container}
-    >
-      {/* Animated background elements */}
-      <View style={styles.bgCircle1} />
-      <View style={styles.bgCircle2} />
+    <SafeAreaView style={styles.safeArea}>
+      <LinearGradient
+        colors={['#064e3b', '#065f46', '#14b8a6']}
+        style={styles.container}
+      >
+        {/* Animated background elements */}
+        <View style={styles.bgCircle1} />
+        <View style={styles.bgCircle2} />
 
-      <View style={styles.content}>
-        {/* Success Icon */}
-        <View style={styles.iconContainer}>
-          <Text style={styles.icon}>✅</Text>
-        </View>
-
-        {/* Title */}
-        <Text style={styles.title}>Mining Complete!</Text>
-        <Text style={styles.subtitle}>You've successfully mined tokens</Text>
-
-        {/* Reward Display */}
-        <LinearGradient
-          colors={['#fbbf24', '#f97316', '#ec4899']}
-          style={styles.rewardCard}
-        >
-          <View style={styles.cardDecorationTop} />
-          <View style={styles.cardDecorationBottom} />
-          <View style={styles.rewardContent}>
-            <Text style={styles.rewardIcon}>💰</Text>
-            <Text style={styles.rewardLabel}>Total Mined</Text>
-            <Text style={styles.rewardValue}>
-              {awarded?.toFixed(4) ?? '...'}
-            </Text>
-            <Text style={styles.rewardUnit}>Tokens</Text>
+        <View style={styles.content}>
+          {/* Success Icon */}
+          <View style={styles.iconContainer}>
+            <Text style={styles.icon}>✅</Text>
           </View>
-        </LinearGradient>
 
-        {/* Claim Button */}
-        <TouchableOpacity
-          onPress={() => navigation.navigate('Home')}
-          activeOpacity={0.8}
-        >
+          {/* Title */}
+          <Text style={styles.title}>Mining Complete!</Text>
+          <Text style={styles.subtitle}>You've successfully mined tokens</Text>
+
+          {/* Reward Display */}
           <LinearGradient
-            colors={['#16a34a', '#059669']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.button}
+            colors={['#fbbf24', '#f97316', '#ec4899']}
+            style={styles.rewardCard}
           >
-            <Text style={styles.buttonText}>🎁 Back to Home</Text>
+            <View style={styles.cardDecorationTop} />
+            <View style={styles.cardDecorationBottom} />
+            <View style={styles.rewardContent}>
+              <Text style={styles.rewardIcon}>💰</Text>
+              <Text style={styles.rewardLabel}>Total Mined</Text>
+              <Text style={styles.rewardValue}>
+                {awarded?.toFixed(4) ?? '...'}
+              </Text>
+              <Text style={styles.rewardUnit}>Tokens</Text>
+            </View>
           </LinearGradient>
-        </TouchableOpacity>
-      </View>
-    </LinearGradient>
+
+          {/* Claim Button */}
+          <TouchableOpacity
+            onPress={() => navigation.navigate('Home')}
+            activeOpacity={0.8}
+          >
+            <LinearGradient
+              colors={['#16a34a', '#059669']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.button}
+            >
+              <Text style={styles.buttonText}>🎁 Back to Home</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+      </LinearGradient>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#064e3b',
+  },
   container: {
     flex: 1,
     justifyContent: 'center',

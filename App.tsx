@@ -8,7 +8,6 @@ import HomeScreen from './src/screens/HomeScreen';
 import MiningScreen from './src/screens/MiningScreen';
 import ClaimScreen from './src/screens/ClaimScreen';
 import AdScreen from './src/screens/AdScreen';
-import WalletScreen from './src/screens/WalletScreen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 const Stack = createStackNavigator();
@@ -45,7 +44,6 @@ function Root() {
         <Stack.Screen name="Mining" component={MiningScreen} />
         <Stack.Screen name="Claim" component={ClaimScreen} />
         <Stack.Screen name="Ad" component={AdScreen} />
-        <Stack.Screen name="Wallet" component={WalletScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

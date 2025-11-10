@@ -6,6 +6,7 @@ import {
   Alert,
   StyleSheet,
   TouchableOpacity,
+  SafeAreaView,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { useMining } from '../contexts/MiningContext';
@@ -28,62 +29,68 @@ export default function SignupScreen({ navigation }: any) {
   };
 
   return (
-    <LinearGradient
-      colors={['#581c87', '#1e3a8a', '#312e81']}
-      style={styles.container}
-    >
-      {/* Animated background elements */}
-      <View style={styles.bgCircle1} />
-      <View style={styles.bgCircle2} />
-      <View style={styles.bgCircle3} />
+    <SafeAreaView style={styles.safeArea}>
+      <LinearGradient
+        colors={['#581c87', '#1e3a8a', '#312e81']}
+        style={styles.container}
+      >
+        {/* Animated background elements */}
+        <View style={styles.bgCircle1} />
+        <View style={styles.bgCircle2} />
+        <View style={styles.bgCircle3} />
 
-      <View style={styles.content}>
-        <View style={styles.card}>
-          {/* Icon */}
-          <View style={styles.iconContainer}>
-            <Text style={styles.icon}>🪙</Text>
+        <View style={styles.content}>
+          <View style={styles.card}>
+            {/* Icon */}
+            <View style={styles.iconContainer}>
+              <Text style={styles.icon}>🪙</Text>
+            </View>
+
+            {/* Title */}
+            <Text style={styles.title}>Crypto Miner</Text>
+            <Text style={styles.subtitle}>
+              Enter your wallet address to start mining tokens
+            </Text>
+
+            {/* Input */}
+            <View style={styles.inputContainer}>
+              <TextInput
+                value={address}
+                onChangeText={text => {
+                  setAddress(text);
+                  setError('');
+                }}
+                placeholder="0x... or your wallet address"
+                placeholderTextColor="rgba(255, 255, 255, 0.6)"
+                autoCapitalize="none"
+                style={styles.input}
+              />
+              {error ? <Text style={styles.errorText}>{error}</Text> : null}
+            </View>
+
+            {/* Button */}
+            <TouchableOpacity onPress={create} activeOpacity={0.8}>
+              <LinearGradient
+                colors={['#9333ea', '#2563eb', '#4f46e5']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.button}
+              >
+                <Text style={styles.buttonText}>Start Mining</Text>
+              </LinearGradient>
+            </TouchableOpacity>
           </View>
-
-          {/* Title */}
-          <Text style={styles.title}>Crypto Miner</Text>
-          <Text style={styles.subtitle}>
-            Enter your wallet address to start mining tokens
-          </Text>
-
-          {/* Input */}
-          <View style={styles.inputContainer}>
-            <TextInput
-              value={address}
-              onChangeText={text => {
-                setAddress(text);
-                setError('');
-              }}
-              placeholder="0x... or your wallet address"
-              placeholderTextColor="rgba(255, 255, 255, 0.6)"
-              autoCapitalize="none"
-              style={styles.input}
-            />
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
-          </View>
-
-          {/* Button */}
-          <TouchableOpacity onPress={create} activeOpacity={0.8}>
-            <LinearGradient
-              colors={['#9333ea', '#2563eb', '#4f46e5']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.button}
-            >
-              <Text style={styles.buttonText}>Start Mining</Text>
-            </LinearGradient>
-          </TouchableOpacity>
         </View>
-      </View>
-    </LinearGradient>
+      </LinearGradient>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#581c87',
+  },
   container: {
     flex: 1,
     justifyContent: 'center',

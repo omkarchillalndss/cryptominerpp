@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  SafeAreaView,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { useMining } from '../contexts/MiningContext';
@@ -40,139 +41,145 @@ export default function MiningScreen({ navigation }: any) {
 
   const durationHours = selectedDuration / 3600;
   const baseRate = 0.01;
-  const effectiveRate = baseRate / currentMultiplier;
+  const effectiveRate = baseRate * currentMultiplier; // Correct: multiply by multiplier
   const totalReward = effectiveRate * selectedDuration;
 
   return (
-    <LinearGradient
-      colors={['#581c87', '#1e3a8a', '#312e81']}
-      style={styles.container}
-    >
-      {/* Animated background elements */}
-      <View style={styles.bgCircle1} />
-      <View style={styles.bgCircle2} />
-      <View style={styles.bgCircle3} />
-
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.content}
+    <SafeAreaView style={styles.safeArea}>
+      <LinearGradient
+        colors={['#581c87', '#1e3a8a', '#312e81']}
+        style={styles.container}
       >
-        {/* Back Button */}
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.backButtonText}>Back</Text>
-        </TouchableOpacity>
+        {/* Animated background elements */}
+        <View style={styles.bgCircle1} />
+        <View style={styles.bgCircle2} />
+        <View style={styles.bgCircle3} />
 
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.miningIcon}>⛏️</Text>
-          <Text style={styles.mainTitle}>Mining in Progress</Text>
-          <View style={styles.activeBadge}>
-            <Text style={styles.badgeText}>Active</Text>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.content}
+        >
+          {/* Back Button */}
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.backButtonText}>Back</Text>
+          </TouchableOpacity>
+
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={styles.miningIcon}>⛏️</Text>
+            <Text style={styles.mainTitle}>Mining in Progress</Text>
+            <View style={styles.activeBadge}>
+              <Text style={styles.badgeText}>Active</Text>
+            </View>
           </View>
-        </View>
 
-        {/* Timer Card */}
-        <LinearGradient
-          colors={['#3b82f6', '#9333ea', '#ec4899']}
-          style={styles.timerCard}
-        >
-          <View style={styles.cardDecoration} />
-          <Text style={styles.timerLabel}>Time Remaining</Text>
-          <Text style={styles.timerValue}>
-            {fmt(Math.max(0, remainingSeconds))}
-          </Text>
-        </LinearGradient>
+          {/* Timer Card */}
+          <LinearGradient
+            colors={['#3b82f6', '#9333ea', '#ec4899']}
+            style={styles.timerCard}
+          >
+            <View style={styles.cardDecoration} />
+            <Text style={styles.timerLabel}>Time Remaining</Text>
+            <Text style={styles.timerValue}>
+              {fmt(Math.max(0, remainingSeconds))}
+            </Text>
+          </LinearGradient>
 
-        {/* Progress Card */}
-        <View style={styles.progressCard}>
-          <Text style={styles.cardTitle}>Mining Progress</Text>
-          <View style={styles.progressContainer}>
-            <ProgressBar progress={progress} />
-            <View style={styles.progressOverlay}>
-              <Text style={styles.progressText}>
+          {/* Progress Card */}
+          <View style={styles.progressCard}>
+            <Text style={styles.cardTitle}>Mining Progress</Text>
+            <View style={styles.progressContainer}>
+              <ProgressBar progress={progress} />
+              <View style={styles.progressOverlay}>
+                <Text style={styles.progressText}>
+                  {(Math.min(progress, 1) * 100).toFixed(1)}%
+                </Text>
+              </View>
+            </View>
+            <View style={styles.progressInfo}>
+              <Text style={styles.progressInfoLabel}>Progress</Text>
+              <Text style={styles.progressInfoValue}>
                 {(Math.min(progress, 1) * 100).toFixed(1)}%
               </Text>
             </View>
           </View>
-          <View style={styles.progressInfo}>
-            <Text style={styles.progressInfoLabel}>Progress</Text>
-            <Text style={styles.progressInfoValue}>
-              {(Math.min(progress, 1) * 100).toFixed(1)}%
+
+          {/* Tokens Mined Card */}
+          <LinearGradient
+            colors={['#fbbf24', '#f97316', '#ec4899']}
+            style={styles.tokensCard}
+          >
+            <View style={styles.cardDecorationBottom} />
+            <Text style={styles.tokensIcon}>💰</Text>
+            <Text style={styles.tokensLabel}>Tokens Mined</Text>
+            <Text style={styles.tokensValue}>{liveTokens.toFixed(6)}</Text>
+            <Text style={styles.tokensTotal}>
+              / {totalReward.toFixed(4)} total
             </Text>
-          </View>
-        </View>
+          </LinearGradient>
 
-        {/* Tokens Mined Card */}
-        <LinearGradient
-          colors={['#fbbf24', '#f97316', '#ec4899']}
-          style={styles.tokensCard}
-        >
-          <View style={styles.cardDecorationBottom} />
-          <Text style={styles.tokensIcon}>💰</Text>
-          <Text style={styles.tokensLabel}>Tokens Mined</Text>
-          <Text style={styles.tokensValue}>{liveTokens.toFixed(6)}</Text>
-          <Text style={styles.tokensTotal}>
-            / {totalReward.toFixed(4)} total
-          </Text>
-        </LinearGradient>
-
-        {/* Mining Info */}
-        <View style={styles.infoCard}>
-          <View style={styles.infoGrid}>
-            <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>Duration</Text>
-              <Text style={styles.infoValue}>{durationHours}h</Text>
-            </View>
-            <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>Multiplier</Text>
-              <Text style={styles.infoValue}>{currentMultiplier}×</Text>
-            </View>
-            <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>Rate</Text>
-              <Text style={styles.infoValueSmall}>
-                {effectiveRate.toFixed(6)}/s
-              </Text>
+          {/* Mining Info */}
+          <View style={styles.infoCard}>
+            <View style={styles.infoGrid}>
+              <View style={styles.infoItem}>
+                <Text style={styles.infoLabel}>Duration</Text>
+                <Text style={styles.infoValue}>{durationHours}h</Text>
+              </View>
+              <View style={styles.infoItem}>
+                <Text style={styles.infoLabel}>Multiplier</Text>
+                <Text style={styles.infoValue}>{currentMultiplier}×</Text>
+              </View>
+              <View style={styles.infoItem}>
+                <Text style={styles.infoLabel}>Rate</Text>
+                <Text style={styles.infoValueSmall}>
+                  {effectiveRate.toFixed(6)}/s
+                </Text>
+              </View>
             </View>
           </View>
-        </View>
 
-        {/* Action Buttons */}
-        <View style={styles.buttonsContainer}>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('Ad')}
-            activeOpacity={0.8}
-            style={styles.buttonHalf}
-          >
-            <LinearGradient
-              colors={['#ca8a04', '#ea580c']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.button}
+          {/* Action Buttons */}
+          <View style={styles.buttonsContainer}>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Ad')}
+              activeOpacity={0.8}
+              style={styles.buttonHalf}
             >
-              <Text style={styles.buttonText}>⚡ Upgrade Multiplier</Text>
-            </LinearGradient>
-          </TouchableOpacity>
+              <LinearGradient
+                colors={['#ca8a04', '#ea580c']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.button}
+              >
+                <Text style={styles.buttonText}>⚡ Upgrade Multiplier</Text>
+              </LinearGradient>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            onPress={() => navigation.navigate('Claim')}
-            activeOpacity={0.8}
-            style={styles.buttonHalf}
-          >
-            <View style={styles.outlineButton}>
-              <Text style={styles.outlineButtonText}>Cancel & Claim</Text>
-            </View>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </LinearGradient>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Claim')}
+              activeOpacity={0.8}
+              style={styles.buttonHalf}
+            >
+              <View style={styles.outlineButton}>
+                <Text style={styles.outlineButtonText}>Cancel & Claim</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </LinearGradient>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#581c87',
+  },
   container: {
     flex: 1,
   },
@@ -231,7 +238,7 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   miningIcon: {
-    fontSize: 60,
+    fontSize: 48,
     marginBottom: 16,
   },
   mainTitle: {
@@ -367,7 +374,7 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   tokensIcon: {
-    fontSize: 36,
+    fontSize: 48,
     marginBottom: 8,
     zIndex: 10,
   },
@@ -379,7 +386,7 @@ const styles = StyleSheet.create({
   },
   tokensValue: {
     color: '#fff',
-    fontSize: 40,
+    fontSize: 32,
     fontWeight: '700',
     fontVariant: ['tabular-nums'],
     zIndex: 10,
@@ -423,7 +430,7 @@ const styles = StyleSheet.create({
   },
   infoValue: {
     color: '#fff',
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '700',
   },
   infoValueSmall: {

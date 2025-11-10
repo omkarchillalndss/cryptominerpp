@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
+  SafeAreaView,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { useMining } from '../contexts/MiningContext';
@@ -28,67 +29,65 @@ export default function HomeScreen({ navigation }: any) {
   const canClaim = false; // This will be determined by your logic
 
   return (
-    <LinearGradient
-      colors={['#581c87', '#1e3a8a', '#312e81']}
-      style={styles.container}
-    >
-      {/* Animated background elements */}
-      <View style={styles.bgCircle1} />
-      <View style={styles.bgCircle2} />
-
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.content}
+    <SafeAreaView style={styles.safeArea}>
+      <LinearGradient
+        colors={['#581c87', '#1e3a8a', '#312e81']}
+        style={styles.container}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.headerRight}>
-            <TouchableOpacity
-              onPress={() => navigation.navigate('Wallet')}
-              style={styles.walletButton}
-            >
-              <Text style={styles.walletButtonText}>💼 Wallet</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={async () => {
-                try {
-                  await logout();
-                  navigation.reset({
-                    index: 0,
-                    routes: [{ name: 'Signup' }],
-                  });
-                } catch (error: any) {
-                  Alert.alert(
-                    'Cannot Logout',
-                    error.message || 'Cannot logout while mining is active',
-                  );
-                }
-              }}
-              style={[styles.walletButton, styles.logoutButton]}
-            >
-              <Text style={styles.walletButtonText}>🚪 Logout</Text>
-            </TouchableOpacity>
-          </View>
-          <Text style={styles.mainTitle}>🪙 Crypto Miner</Text>
-          <View style={styles.addressContainer}>
-            <Text style={styles.addressText}>
-              {walletAddress?.slice(0, 6)}...{walletAddress?.slice(-4)}
-            </Text>
-          </View>
-        </View>
+        {/* Animated background elements */}
+        <View style={styles.bgCircle1} />
+        <View style={styles.bgCircle2} />
 
-        {/* Balances */}
-        <View style={styles.balancesContainer}>
-          <LinearGradient
-            colors={['#fbbf24', '#f97316', '#ec4899']}
-            style={styles.balanceCard}
-          >
-            <View style={styles.cardDecoration} />
-            <Text style={styles.balanceLabel}>Mining Balance</Text>
-            <Text style={styles.balanceValue}>{totalBalance.toFixed(4)}</Text>
-          </LinearGradient>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.content}
+        >
+          {/* Header */}
+          <View style={styles.header}>
+            {/* Logout Button - Top Right */}
+            <View style={styles.logoutContainer}>
+              <TouchableOpacity
+                onPress={async () => {
+                  try {
+                    await logout();
+                    navigation.reset({
+                      index: 0,
+                      routes: [{ name: 'Signup' }],
+                    });
+                  } catch (error: any) {
+                    Alert.alert(
+                      'Cannot Logout',
+                      error.message || 'Cannot logout while mining is active',
+                    );
+                  }
+                }}
+                style={styles.logoutButton}
+              >
+                <Text style={styles.logoutButtonText}>🚪 Logout</Text>
+              </TouchableOpacity>
+            </View>
 
-          {/* <LinearGradient
+            {/* Title and Address - Centered */}
+            <Text style={styles.mainTitle}>🪙 Crypto Miner</Text>
+            <View style={styles.addressContainer}>
+              <Text style={styles.addressText}>
+                {walletAddress?.slice(0, 6)}...{walletAddress?.slice(-4)}
+              </Text>
+            </View>
+          </View>
+
+          {/* Balances */}
+          <View style={styles.balancesContainer}>
+            <LinearGradient
+              colors={['#fbbf24', '#f97316', '#ec4899']}
+              style={styles.balanceCard}
+            >
+              <View style={styles.cardDecoration} />
+              <Text style={styles.balanceLabel}>Mining Balance</Text>
+              <Text style={styles.balanceValue}>{totalBalance.toFixed(4)}</Text>
+            </LinearGradient>
+
+            {/* <LinearGradient
             colors={['#4ade80', '#10b981', '#14b8a6']}
             style={styles.balanceCard}
           >
@@ -98,112 +97,117 @@ export default function HomeScreen({ navigation }: any) {
               {(walletBalance || 0).toFixed(4)}
             </Text>
           </LinearGradient> */}
-        </View>
-
-        {/* Mining Status Card */}
-        <View style={styles.statusCard}>
-          <View style={styles.statusHeader}>
-            <Text style={styles.statusTitle}>Mining Status</Text>
-            <View style={[styles.badge, isMining && styles.badgeActive]}>
-              <Text style={styles.badgeText}>
-                {isMining ? '🟢 Active' : '⚪ Inactive'}
-              </Text>
-            </View>
           </View>
 
-          <View style={styles.statusContent}>
-            {!isMining && !canClaim && (
-              <View style={styles.centerContent}>
-                <Text style={styles.statusMessage}>
-                  Start mining to earn tokens
+          {/* Mining Status Card */}
+          <View style={styles.statusCard}>
+            <View style={styles.statusHeader}>
+              <Text style={styles.statusTitle}>Mining Status</Text>
+              <View style={[styles.badge, isMining && styles.badgeActive]}>
+                <Text style={styles.badgeText}>
+                  {isMining ? '🟢 Active' : '⚪ Inactive'}
                 </Text>
-                <TouchableOpacity
-                  onPress={() => setPopup(true)}
-                  activeOpacity={0.8}
-                >
-                  <LinearGradient
-                    colors={['#9333ea', '#2563eb']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={styles.actionButton}
-                  >
-                    <Text style={styles.actionButtonText}>Start Mining</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
               </View>
-            )}
+            </View>
 
-            {canClaim && (
-              <View style={styles.centerContent}>
-                <Text style={styles.checkmark}>✅</Text>
-                <Text style={styles.successMessage}>
-                  Mining completed! Claim your rewards.
-                </Text>
-                <TouchableOpacity
-                  onPress={() => navigation.navigate('Claim')}
-                  activeOpacity={0.8}
-                >
-                  <LinearGradient
-                    colors={['#16a34a', '#059669']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={styles.actionButton}
+            <View style={styles.statusContent}>
+              {!isMining && !canClaim && (
+                <View style={styles.centerContent}>
+                  <Text style={styles.statusMessage}>
+                    Start mining to earn tokens
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => setPopup(true)}
+                    activeOpacity={0.8}
                   >
-                    <Text style={styles.actionButtonText}>Claim Rewards</Text>
-                  </LinearGradient>
+                    <LinearGradient
+                      colors={['#9333ea', '#2563eb']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={styles.actionButton}
+                    >
+                      <Text style={styles.actionButtonText}>Start Mining</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {canClaim && (
+                <View style={styles.centerContent}>
+                  <Text style={styles.checkmark}>✅</Text>
+                  <Text style={styles.successMessage}>
+                    Mining completed! Claim your rewards.
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => navigation.navigate('Claim')}
+                    activeOpacity={0.8}
+                  >
+                    <LinearGradient
+                      colors={['#16a34a', '#059669']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={styles.actionButton}
+                    >
+                      <Text style={styles.actionButtonText}>Claim Rewards</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {isMining && (
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('Mining')}
+                  activeOpacity={0.8}
+                  style={styles.centerContent}
+                >
+                  <Text style={styles.miningIcon}>⛏️</Text>
+                  <Text style={styles.miningMessage}>
+                    Mining in progress... Tap to view
+                  </Text>
                 </TouchableOpacity>
+              )}
+            </View>
+          </View>
+
+          {/* Info Card */}
+          <View style={styles.infoCard}>
+            <View style={styles.infoGrid}>
+              <View style={styles.infoItem}>
+                <Text style={styles.infoLabel}>Base Rate</Text>
+                <Text style={styles.infoValue}>0.01 tokens/sec</Text>
               </View>
-            )}
-
-            {isMining && (
-              <TouchableOpacity
-                onPress={() => navigation.navigate('Mining')}
-                activeOpacity={0.8}
-                style={styles.centerContent}
-              >
-                <Text style={styles.miningIcon}>⛏️</Text>
-                <Text style={styles.miningMessage}>
-                  Mining in progress... Tap to view
-                </Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
-
-        {/* Info Card */}
-        <View style={styles.infoCard}>
-          <View style={styles.infoGrid}>
-            <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>Base Rate</Text>
-              <Text style={styles.infoValue}>0.01 tokens/sec</Text>
-            </View>
-            <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>Multiplier</Text>
-              <Text style={styles.infoValue}>1× - 6×</Text>
+              <View style={styles.infoItem}>
+                <Text style={styles.infoLabel}>Multiplier</Text>
+                <Text style={styles.infoValue}>1× - 6×</Text>
+              </View>
             </View>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
 
-      <DurationPopup
-        visible={popup}
-        currentMultiplier={currentMultiplier}
-        onClose={() => setPopup(false)}
-        onUpgrade={() => {
-          setPopup(false);
-          navigation.navigate('Ad');
-        }}
-        onStart={async sec => {
-          setPopup(false);
-          await startMining(sec);
-          navigation.navigate('Mining');
-        }}
-      />
-    </LinearGradient>
+        <DurationPopup
+          visible={popup}
+          currentMultiplier={currentMultiplier}
+          onClose={() => setPopup(false)}
+          onUpgrade={() => {
+            setPopup(false);
+            navigation.navigate('Ad');
+          }}
+          onStart={async sec => {
+            setPopup(false);
+            await startMining(sec);
+            navigation.navigate('Mining');
+          }}
+        />
+      </LinearGradient>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#581c87',
+  },
   container: {
     flex: 1,
   },
@@ -236,25 +240,19 @@ const styles = StyleSheet.create({
   header: {
     marginBottom: 32,
   },
-  headerRight: {
+  logoutContainer: {
     alignItems: 'flex-end',
     marginBottom: 16,
-    flexDirection: 'row',
-    gap: 8,
   },
-  walletButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  logoutButton: {
+    backgroundColor: 'rgba(239, 68, 68, 0.2)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderColor: 'rgba(239, 68, 68, 0.4)',
     borderRadius: 12,
     paddingVertical: 8,
     paddingHorizontal: 16,
   },
-  logoutButton: {
-    backgroundColor: 'rgba(239, 68, 68, 0.2)',
-    borderColor: 'rgba(239, 68, 68, 0.4)',
-  },
-  walletButtonText: {
+  logoutButtonText: {
     color: '#fff',
     fontSize: 14,
     fontWeight: '600',
