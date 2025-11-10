@@ -1,6 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Animated, Text } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
+import LottieView from 'lottie-react-native';
+import cryptoAnimation from '../assets/crypto_bitcoins.json';
 
 interface SplashScreenProps {
   onFinish: () => void;
@@ -81,7 +83,7 @@ export default function SplashScreen({ onFinish }: SplashScreenProps) {
         ]}
       >
         {/* Rotating coin icon */}
-        <Animated.View
+        {/* <Animated.View
           style={[
             styles.coinContainer,
             {
@@ -95,11 +97,32 @@ export default function SplashScreen({ onFinish }: SplashScreenProps) {
           >
             <Text style={styles.coinIcon}>₿</Text>
           </LinearGradient>
-        </Animated.View>
+        </Animated.View> */}
 
         {/* App name */}
-        <Text style={styles.appName}>Crypto Miner</Text>
-        <Text style={styles.tagline}>Mine. Earn. Grow.</Text>
+        {/* <Text style={styles.appName}>Crypto Miner</Text>
+        <Text style={styles.tagline}>Mine. Earn. Grow.</Text> */}
+
+        {/* Replace rotating coin with Lottie animation */}
+        <Animated.View
+          style={[
+            styles.content,
+            {
+              opacity: fadeAnim,
+              transform: [{ scale: scaleAnim }],
+            },
+          ]}
+        >
+          <LottieView
+            source={cryptoAnimation}
+            autoPlay
+            loop
+            style={{ width: 240, height: 240, marginBottom: 24 }}
+          />
+
+          <Text style={styles.appName}>Crypto Miner</Text>
+          <Text style={styles.tagline}>Mine. Earn. Grow.</Text>
+        </Animated.View>
       </Animated.View>
     </LinearGradient>
   );

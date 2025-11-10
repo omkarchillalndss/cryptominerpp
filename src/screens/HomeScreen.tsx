@@ -67,7 +67,7 @@ export default function HomeScreen({ navigation }: any) {
             <Text style={styles.balanceValue}>{totalBalance.toFixed(4)}</Text>
           </LinearGradient>
 
-          <LinearGradient
+          {/* <LinearGradient
             colors={['#4ade80', '#10b981', '#14b8a6']}
             style={styles.balanceCard}
           >
@@ -76,7 +76,7 @@ export default function HomeScreen({ navigation }: any) {
             <Text style={styles.balanceValue}>
               {(walletBalance || 0).toFixed(4)}
             </Text>
-          </LinearGradient>
+          </LinearGradient> */}
         </View>
 
         {/* Mining Status Card */}
