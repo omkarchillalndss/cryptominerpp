@@ -16,6 +16,7 @@ interface MiningContextType {
   walletAddress: string;
   setWalletAddress: (addr: string) => void;
   totalBalance: number;
+  walletBalance: number;
   refreshBalance: () => Promise<void>;
   miningStatus: MiningStatus;
   currentMultiplier: number;
@@ -25,7 +26,7 @@ interface MiningContextType {
   startMining: (durationSeconds: number) => Promise<void>;
   stopMining: () => Promise<void>;
   upgradeMultiplier: () => Promise<void>;
-  claimRewards: () => Promise<void>;
+  claimRewards: () => Promise<number>;
 }
 
 const BASE_RATE = 0.01; // tokens/sec
@@ -50,6 +51,7 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [walletAddress, setWalletAddress] = useState('');
   const [totalBalance, setTotalBalance] = useState(0);
+  const [walletBalance, setWalletBalance] = useState(0);
   const [miningStatus, setMiningStatus] = useState<MiningStatus>('inactive');
   const [currentMultiplier, setCurrentMultiplier] = useState(1);
   const [selectedDuration, setSelectedDuration] = useState(0);
@@ -147,6 +149,7 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
     if (!walletAddress) return;
     const res = await api.get(`/api/users/${walletAddress}`);
     setTotalBalance(res.data.totalBalance ?? 0);
+    setWalletBalance(res.data.walletBalance ?? res.data.totalBalance ?? 0);
   };
 
   const startMining = async (durationSeconds: number) => {
@@ -216,6 +219,7 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
     walletAddress,
     setWalletAddress,
     totalBalance,
+    walletBalance,
     refreshBalance,
     miningStatus,
     currentMultiplier,

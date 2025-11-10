@@ -1,42 +1,211 @@
 import React, { useState } from 'react';
-import { View, TextInput, Button, Text, Alert } from 'react-native';
+import {
+  View,
+  TextInput,
+  Text,
+  Alert,
+  StyleSheet,
+  TouchableOpacity,
+} from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import { useMining } from '../contexts/MiningContext';
 import { api } from '../services/api';
 
 export default function SignupScreen({ navigation }: any) {
   const { setWalletAddress, refreshBalance } = useMining();
   const [address, setAddress] = useState('');
+  const [error, setError] = useState('');
 
   const create = async () => {
+    if (!address.trim()) {
+      setError('Please enter a wallet address');
+      return;
+    }
+    if (address.length < 10) {
+      setError('Please enter a valid wallet address');
+      return;
+    }
     if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
       Alert.alert('Invalid wallet address');
       return;
     }
-    await api.post('/api/users/signup', { walletAddress: address });
-    setWalletAddress(address);
+    await api.post('/api/users/signup', { walletAddress: address.trim() });
+    setWalletAddress(address.trim());
     await refreshBalance();
     navigation.replace('Home');
   };
 
   return (
-    <View style={{ padding: 20 }}>
-      <Text style={{ fontSize: 22, fontWeight: '700' }}>
-        Enter Wallet Address
-      </Text>
-      <TextInput
-        value={address}
-        onChangeText={setAddress}
-        placeholder="0x..."
-        autoCapitalize="none"
-        style={{
-          borderWidth: 1,
-          borderColor: '#ddd',
-          borderRadius: 12,
-          padding: 12,
-          marginTop: 12,
-        }}
-      />
-      <Button title="Create Account" onPress={create} />
-    </View>
+    <LinearGradient
+      colors={['#581c87', '#1e3a8a', '#312e81']}
+      style={styles.container}
+    >
+      {/* Animated background elements */}
+      <View style={styles.bgCircle1} />
+      <View style={styles.bgCircle2} />
+      <View style={styles.bgCircle3} />
+
+      <View style={styles.content}>
+        <View style={styles.card}>
+          {/* Icon */}
+          <View style={styles.iconContainer}>
+            <Text style={styles.icon}>🪙</Text>
+          </View>
+
+          {/* Title */}
+          <Text style={styles.title}>Crypto Miner</Text>
+          <Text style={styles.subtitle}>
+            Enter your wallet address to start mining tokens
+          </Text>
+
+          {/* Input */}
+          <View style={styles.inputContainer}>
+            <TextInput
+              value={address}
+              onChangeText={text => {
+                setAddress(text);
+                setError('');
+              }}
+              placeholder="0x... or your wallet address"
+              placeholderTextColor="rgba(255, 255, 255, 0.6)"
+              autoCapitalize="none"
+              style={styles.input}
+            />
+            {error ? <Text style={styles.errorText}>{error}</Text> : null}
+          </View>
+
+          {/* Button */}
+          <TouchableOpacity onPress={create} activeOpacity={0.8}>
+            <LinearGradient
+              colors={['#9333ea', '#2563eb', '#4f46e5']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.button}
+            >
+              <Text style={styles.buttonText}>Start Mining</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </LinearGradient>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
+  bgCircle1: {
+    position: 'absolute',
+    top: '25%',
+    left: '25%',
+    width: 384,
+    height: 384,
+    backgroundColor: 'rgba(168, 85, 247, 0.2)',
+    borderRadius: 192,
+    opacity: 0.2,
+  },
+  bgCircle2: {
+    position: 'absolute',
+    bottom: '25%',
+    right: '25%',
+    width: 384,
+    height: 384,
+    backgroundColor: 'rgba(59, 130, 246, 0.2)',
+    borderRadius: 192,
+    opacity: 0.2,
+  },
+  bgCircle3: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    width: 384,
+    height: 384,
+    backgroundColor: 'rgba(99, 102, 241, 0.2)',
+    borderRadius: 192,
+    opacity: 0.2,
+  },
+  content: {
+    width: '100%',
+    maxWidth: 448,
+    zIndex: 10,
+  },
+  card: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 20 },
+    shadowOpacity: 0.5,
+    shadowRadius: 40,
+    elevation: 20,
+  },
+  iconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#f59e0b',
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'center',
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  icon: {
+    fontSize: 36,
+  },
+  title: {
+    fontSize: 30,
+    fontWeight: '700',
+    color: '#fff',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#e9d5ff',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  inputContainer: {
+    marginBottom: 16,
+  },
+  input: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderRadius: 12,
+    padding: 12,
+    color: '#fff',
+    fontSize: 16,
+  },
+  errorText: {
+    color: '#fca5a5',
+    fontSize: 14,
+    marginTop: 8,
+  },
+  button: {
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+});
