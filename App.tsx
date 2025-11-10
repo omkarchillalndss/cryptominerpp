@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { MiningProvider, useMining } from './src/contexts/MiningContext';
+import SplashScreen from './src/screens/SplashScreen';
 import SignupScreen from './src/screens/SignupScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import MiningScreen from './src/screens/MiningScreen';
@@ -32,6 +33,16 @@ function Root() {
 }
 
 export default function App() {
+  const [showSplash, setShowSplash] = useState(true);
+
+  if (showSplash) {
+    return (
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <SplashScreen onFinish={() => setShowSplash(false)} />
+      </GestureHandlerRootView>
+    );
+  }
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <MiningProvider>
