@@ -22,23 +22,14 @@ const fmt = (s: number) => {
 };
 
 export default function MiningScreen({ navigation }: any) {
-  const {
-    remainingSeconds,
-    selectedDuration,
-    liveTokens,
-    currentMultiplier,
-    miningStatus,
-    stopMining,
-  } = useMining();
+  const { remainingSeconds, selectedDuration, liveTokens, currentMultiplier } =
+    useMining();
 
   const progress =
     selectedDuration > 0
       ? (selectedDuration - remainingSeconds) / selectedDuration
       : 0;
-  const finished =
-    miningStatus === 'inactive' &&
-    remainingSeconds === 0 &&
-    selectedDuration > 0;
+  const finished = remainingSeconds === 0 && selectedDuration > 0;
 
   const durationHours = selectedDuration / 3600;
   const baseRate = 0.01;
@@ -159,10 +150,13 @@ export default function MiningScreen({ navigation }: any) {
             <TouchableOpacity
               onPress={() => navigation.navigate('Ad')}
               activeOpacity={0.8}
+              disabled={finished}
               style={styles.buttonHalf}
             >
               <LinearGradient
-                colors={['#ca8a04', '#ea580c']}
+                colors={
+                  finished ? ['#6b7280', '#4b5563'] : ['#ca8a04', '#ea580c']
+                }
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.button}
@@ -174,11 +168,21 @@ export default function MiningScreen({ navigation }: any) {
             <TouchableOpacity
               onPress={() => navigation.navigate('Claim')}
               activeOpacity={0.8}
+              disabled={!finished}
               style={styles.buttonHalf}
             >
-              <View style={styles.outlineButton}>
-                <Text style={styles.outlineButtonText}>Cancel & Claim</Text>
-              </View>
+              <LinearGradient
+                colors={
+                  finished ? ['#16a34a', '#059669'] : ['#6b7280', '#4b5563']
+                }
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.button}
+              >
+                <Text style={styles.buttonText}>
+                  {finished ? '✅ Claim Rewards' : '⏳ Claim (Mining...)'}
+                </Text>
+              </LinearGradient>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -468,24 +472,6 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   buttonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  outlineButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 10,
-  },
-  outlineButtonText: {
     color: '#fff',
     fontSize: 14,
     fontWeight: '600',
