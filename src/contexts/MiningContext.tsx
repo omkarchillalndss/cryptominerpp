@@ -209,7 +209,7 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
     hydrate();
   }, []);
 
-  // Real-time sync with backend every 10 seconds
+  // Real-time sync with backend every 2 seconds for immediate updates
   useEffect(() => {
     if (!walletAddress) return;
 
@@ -264,8 +264,8 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
     // Initial sync
     syncWithBackend();
 
-    // Sync every 10 seconds
-    syncIntervalRef.current = setInterval(syncWithBackend, 10000);
+    // Sync every 2 seconds for near real-time updates
+    syncIntervalRef.current = setInterval(syncWithBackend, 2000);
 
     return () => {
       if (syncIntervalRef.current) clearInterval(syncIntervalRef.current);
@@ -445,10 +445,21 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
       ) {
         await persist();
       }
+
+      // Sync immediately when app comes to foreground
+      if (
+        appState.current.match(/inactive|background/) &&
+        nextState === 'active' &&
+        walletAddress
+      ) {
+        console.log('🔄 App resumed, syncing with backend...');
+        await refreshBalance();
+      }
+
       appState.current = nextState;
     });
     return () => sub.remove();
-  }, []);
+  }, [walletAddress]);
 
   const value = {
     walletAddress,
