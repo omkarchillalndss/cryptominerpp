@@ -202,7 +202,7 @@ export default function HomeScreen({ navigation }: any) {
               </View>
               <View style={styles.infoItem}>
                 <Text style={styles.infoLabel}>Multiplier</Text>
-                <Text style={styles.infoValue}>1× - 6×</Text>
+                <Text style={styles.infoValue}>1X - 6X</Text>
               </View>
             </View>
           </View>
