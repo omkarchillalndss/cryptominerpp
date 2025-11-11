@@ -412,18 +412,13 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const logout = async () => {
-    // Check if user is currently mining
-    if (miningStatus === 'active') {
-      console.log('❌ Cannot logout while mining is active');
-      throw new Error('Cannot logout while mining is active');
-    }
-
     console.log('🚪 Logging out...');
-    // Stop all intervals
+
+    // Stop all intervals (mining continues on backend)
     if (intervalRef.current) clearInterval(intervalRef.current);
     if (syncIntervalRef.current) clearInterval(syncIntervalRef.current);
 
-    // Clear only local state (backend balance remains intact)
+    // Clear only local state (backend mining session and balance remain intact)
     setWalletAddressState('');
     setTotalBalance(0);
     setWalletBalance(0);
@@ -435,7 +430,7 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
 
     // Clear AsyncStorage
     await AsyncStorage.removeItem(STORAGE_KEY);
-    console.log('✅ Logged out successfully');
+    console.log('✅ Logged out successfully - mining continues on backend');
   };
 
   useEffect(() => {

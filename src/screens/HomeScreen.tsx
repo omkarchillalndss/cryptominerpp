@@ -49,17 +49,33 @@ export default function HomeScreen({ navigation }: any) {
             <View style={styles.logoutContainer}>
               <TouchableOpacity
                 onPress={async () => {
-                  try {
+                  if (isMining) {
+                    Alert.alert(
+                      'Logout During Mining',
+                      'Your mining session will continue on the server. You can log back in anytime to check your progress.',
+                      [
+                        {
+                          text: 'Cancel',
+                          style: 'cancel',
+                        },
+                        {
+                          text: 'Logout',
+                          onPress: async () => {
+                            await logout();
+                            navigation.reset({
+                              index: 0,
+                              routes: [{ name: 'Signup' }],
+                            });
+                          },
+                        },
+                      ],
+                    );
+                  } else {
                     await logout();
                     navigation.reset({
                       index: 0,
                       routes: [{ name: 'Signup' }],
                     });
-                  } catch (error: any) {
-                    Alert.alert(
-                      'Cannot Logout',
-                      error.message || 'Cannot logout while mining is active',
-                    );
                   }
                 }}
                 style={styles.logoutButton}
