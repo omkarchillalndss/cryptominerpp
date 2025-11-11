@@ -23,11 +23,12 @@ export default function HomeScreen({ navigation }: any) {
     walletAddress,
     walletBalance,
     logout,
+    hasUnclaimedRewards,
   } = useMining();
   const [popup, setPopup] = useState(false);
 
   const isMining = miningStatus === 'active';
-  const canClaim = false; // This will be determined by your logic
+  const canClaim = hasUnclaimedRewards;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -217,9 +218,26 @@ export default function HomeScreen({ navigation }: any) {
             navigation.navigate('Ad');
           }}
           onStart={async sec => {
-            setPopup(false);
-            await startMining(sec);
-            navigation.navigate('Mining');
+            try {
+              setPopup(false);
+              await startMining(sec);
+              navigation.navigate('Mining');
+            } catch (error: any) {
+              Alert.alert(
+                'Cannot Start Mining',
+                error.message || 'Please claim your previous rewards first',
+                [
+                  {
+                    text: 'Claim Now',
+                    onPress: () => navigation.navigate('Claim'),
+                  },
+                  {
+                    text: 'OK',
+                    style: 'cancel',
+                  },
+                ],
+              );
+            }
           }}
         />
       </LinearGradient>

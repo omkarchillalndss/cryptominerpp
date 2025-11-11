@@ -14,7 +14,8 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 const Stack = createStackNavigator();
 
 function Root() {
-  const { walletAddress, isLoading, miningStatus } = useMining();
+  const { walletAddress, isLoading, miningStatus, hasUnclaimedRewards } =
+    useMining();
   const [showInitialSplash, setShowInitialSplash] = useState(true);
 
   // Show splash screen on first load
@@ -30,6 +31,7 @@ function Root() {
   // Determine initial route based on wallet and mining status
   const getInitialRoute = () => {
     if (!walletAddress) return 'Signup';
+    if (hasUnclaimedRewards) return 'Claim';
     if (miningStatus === 'active') return 'Mining';
     return 'Home';
   };

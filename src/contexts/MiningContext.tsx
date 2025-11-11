@@ -24,6 +24,7 @@ interface MiningContextType {
   remainingSeconds: number;
   liveTokens: number;
   isLoading: boolean;
+  hasUnclaimedRewards: boolean;
   startMining: (durationSeconds: number) => Promise<void>;
   stopMining: () => Promise<void>;
   upgradeMultiplier: () => Promise<void>;
@@ -60,6 +61,7 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
   const [remainingSeconds, setRemainingSeconds] = useState(0);
   const [liveTokens, setLiveTokens] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasUnclaimedRewards, setHasUnclaimedRewards] = useState(false);
 
   // Wrapper to persist wallet address when set
   const setWalletAddress = async (addr: string) => {
@@ -164,8 +166,14 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
               const elapsedTokens = effectiveTokens(elapsed, multiplier);
               setLiveTokens(elapsedTokens);
               tickStart(startTs, duration, multiplier, 0);
+              setHasUnclaimedRewards(false);
             } else {
+              // Mining finished but not claimed yet
               setMiningStatus('inactive');
+              const elapsedTokens = effectiveTokens(elapsed, multiplier);
+              setLiveTokens(elapsedTokens);
+              setHasUnclaimedRewards(true);
+              console.log('⏰ Unclaimed rewards detected on login!');
             }
           } else {
             // Not mining on backend, use local state
@@ -173,6 +181,7 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
             setSelectedDuration(saved.selectedDuration);
             setCurrentMultiplier(saved.multiplier || 1);
             setLiveTokens(saved.liveTokens || 0);
+            setHasUnclaimedRewards(false);
           }
         } catch (error) {
           console.error('Failed to sync with backend:', error);
@@ -230,20 +239,39 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
           const elapsed = Math.floor((Date.now() - startTs) / 1000);
           const rem = Math.max(duration - elapsed, 0);
 
-          // Only update if mining status changed or multiplier changed
+          // Update mining state if status changed or multiplier changed
           if (miningStatus !== 'active' || currentMultiplier !== multiplier) {
             console.log('🔄 Syncing mining state from backend...');
             setMiningStatus('active');
             setSelectedDuration(duration);
-            setRemainingSeconds(rem);
             setCurrentMultiplier(multiplier);
+            setHasUnclaimedRewards(false);
 
             if (rem > 0) {
               const elapsedTokens = effectiveTokens(elapsed, multiplier);
               setLiveTokens(elapsedTokens);
+              setRemainingSeconds(rem);
               tickStart(startTs, duration, multiplier, 0);
             } else {
+              // Mining finished but not claimed
               setMiningStatus('inactive');
+              const elapsedTokens = effectiveTokens(elapsed, multiplier);
+              setLiveTokens(elapsedTokens);
+              setRemainingSeconds(0);
+              setHasUnclaimedRewards(true);
+            }
+          } else if (miningStatus === 'active') {
+            // Already mining - just sync the time from backend to stay accurate
+            setRemainingSeconds(rem);
+            const elapsedTokens = effectiveTokens(elapsed, multiplier);
+            setLiveTokens(elapsedTokens);
+
+            // Check if mining just finished
+            if (rem <= 0) {
+              if (intervalRef.current) clearInterval(intervalRef.current);
+              setMiningStatus('inactive');
+              setHasUnclaimedRewards(true);
+              console.log('⏰ Mining completed during sync!');
             }
           }
         } else if (
@@ -256,6 +284,7 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
           setMiningStatus('inactive');
           setLiveTokens(0);
           setCurrentMultiplier(1);
+          setHasUnclaimedRewards(false);
         }
       } catch (error) {
         console.error('❌ Failed to sync with backend:', error);
@@ -305,6 +334,8 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
       if (rem <= 0) {
         if (intervalRef.current) clearInterval(intervalRef.current);
         setMiningStatus('inactive');
+        setHasUnclaimedRewards(true);
+        console.log('⏰ Mining completed! Rewards ready to claim.');
       }
     }, 1000);
   };
@@ -347,6 +378,13 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
   const startMining = async (durationSeconds: number) => {
     if (!walletAddress) throw new Error('No wallet');
 
+    // Prevent starting new mining if there are unclaimed rewards
+    if (hasUnclaimedRewards) {
+      throw new Error(
+        'Please claim your previous rewards before starting new mining',
+      );
+    }
+
     // Use client timestamp to avoid network delay issues
     const clientStartTs = Date.now();
 
@@ -362,6 +400,7 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
     setRemainingSeconds(durationSeconds);
     setLiveTokens(0);
     setMiningStatus('active');
+    setHasUnclaimedRewards(false);
     tickStart(clientStartTs, durationSeconds, currentMultiplier, 0);
     await persist({
       startTimestamp: clientStartTs,
@@ -406,6 +445,7 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
     setLiveTokens(0);
     setMiningStatus('inactive');
     setCurrentMultiplier(1); // Reset multiplier to 1 after claiming
+    setHasUnclaimedRewards(false); // Clear unclaimed rewards flag
     await refreshBalance();
     await persist({ miningStatus: 'inactive', liveTokens: 0, multiplier: 1 });
     return awarded as number;
@@ -427,6 +467,7 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
     setSelectedDuration(0);
     setRemainingSeconds(0);
     setLiveTokens(0);
+    setHasUnclaimedRewards(false);
 
     // Clear AsyncStorage
     await AsyncStorage.removeItem(STORAGE_KEY);
@@ -469,6 +510,7 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
     remainingSeconds,
     liveTokens,
     isLoading,
+    hasUnclaimedRewards,
     startMining,
     stopMining,
     upgradeMultiplier,
