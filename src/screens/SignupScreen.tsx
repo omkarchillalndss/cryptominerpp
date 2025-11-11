@@ -76,7 +76,7 @@ export default function SignupScreen({ navigation }: any) {
                 end={{ x: 1, y: 0 }}
                 style={styles.button}
               >
-                <Text style={styles.buttonText}>Start Mining</Text>
+                <Text style={styles.buttonText}>Continue...</Text>
               </LinearGradient>
             </TouchableOpacity>
           </View>

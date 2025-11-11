@@ -88,7 +88,9 @@ export default function HomeScreen({ navigation }: any) {
             <Text style={styles.mainTitle}>🪙 Crypto Miner</Text>
             <View style={styles.addressContainer}>
               <Text style={styles.addressText}>
-                {walletAddress?.slice(0, 6)}...{walletAddress?.slice(-4)}
+                {walletAddress && walletAddress.length > 10
+                  ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`
+                  : walletAddress}
               </Text>
             </View>
           </View>
