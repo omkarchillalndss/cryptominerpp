@@ -384,6 +384,17 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
     const res = await api.put('/api/mining/upgrade', { walletAddress });
     const newMult = res.data.multiplier as number;
     setCurrentMultiplier(newMult);
+
+    // If mining is active, restart the ticker with the new multiplier
+    if (miningStatus === 'active' && selectedDuration > 0) {
+      const startTs = Date.now() - (selectedDuration - remainingSeconds) * 1000;
+      const elapsed = Math.floor((Date.now() - startTs) / 1000);
+      const currentTokens = effectiveTokens(elapsed, currentMultiplier);
+
+      // Restart ticker with new multiplier, preserving current progress
+      tickStart(startTs, selectedDuration, newMult, 0);
+    }
+
     await persist({ multiplier: newMult });
   };
 
