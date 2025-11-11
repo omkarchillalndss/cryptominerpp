@@ -328,20 +328,44 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
               setHasUnclaimedRewards(true);
             }
           } else if (miningStatus === 'active') {
-            // Already mining - just sync the time from backend to stay accurate
-            setRemainingSeconds(rem);
-            // Cap elapsed time at duration to prevent tokens from growing after timer stops
-            const cappedElapsed = Math.min(elapsed, duration);
-            const elapsedTokens = effectiveTokens(cappedElapsed, multiplier);
-            setLiveTokens(elapsedTokens);
+            // Already mining - check if backend startTime or duration changed
+            // This happens when admin changes mining session from backend
+            const currentStartTs =
+              Date.now() - (selectedDuration - remainingSeconds) * 1000;
+            const timeDiff = Math.abs(currentStartTs - startTs);
+            const durationChanged = selectedDuration !== duration;
 
-            // Check if mining just finished
-            if (rem <= 0) {
-              if (intervalRef.current) clearInterval(intervalRef.current);
-              setMiningStatus('inactive');
-              setHasUnclaimedRewards(true);
-              console.log('⏰ Mining completed during sync!');
+            // If backend data changed significantly (more than 5 seconds or duration changed)
+            // restart the ticker with new backend data
+            if (timeDiff > 5000 || durationChanged) {
+              console.log(
+                '🔄 Backend mining data changed, restarting ticker...',
+              );
+              setSelectedDuration(duration);
+              setCurrentMultiplier(multiplier);
+
+              if (rem > 0) {
+                const cappedElapsed = Math.min(elapsed, duration);
+                const elapsedTokens = effectiveTokens(
+                  cappedElapsed,
+                  multiplier,
+                );
+                setLiveTokens(elapsedTokens);
+                setRemainingSeconds(rem);
+                // Restart ticker with new backend data
+                tickStart(startTs, duration, multiplier, 0);
+              } else {
+                // Mining finished
+                if (intervalRef.current) clearInterval(intervalRef.current);
+                setMiningStatus('inactive');
+                const elapsedTokens = effectiveTokens(duration, multiplier);
+                setLiveTokens(elapsedTokens);
+                setRemainingSeconds(0);
+                setHasUnclaimedRewards(true);
+                console.log('⏰ Mining completed during sync!');
+              }
             }
+            // Otherwise, let the local ticker continue smoothly without interference
           }
         } else if (
           res.data.miningStatus === 'inactive' &&
