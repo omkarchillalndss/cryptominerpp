@@ -115,21 +115,21 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
   const hydrate = async () => {
     console.log('🔄 Hydrating app state...');
 
-    // Test backend connection
     try {
-      const healthCheck = await api.get('/health');
-      console.log('✅ Backend is reachable:', healthCheck.data);
-    } catch (error) {
-      console.error('❌ Backend not reachable:', error);
-    }
+      // Test backend connection
+      try {
+        const healthCheck = await api.get('/health');
+        console.log('✅ Backend is reachable:', healthCheck.data);
+      } catch (error) {
+        console.error('❌ Backend not reachable:', error);
+      }
 
-    const raw = await AsyncStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      console.log('❌ No saved state found');
-      setIsLoading(false);
-      return;
-    }
-    try {
+      const raw = await AsyncStorage.getItem(STORAGE_KEY);
+      if (!raw) {
+        console.log('❌ No saved state found');
+        return;
+      }
+
       const saved: Persisted = JSON.parse(raw);
       const walletAddr = saved.walletAddress || '';
       console.log('💼 Wallet address found:', walletAddr);
@@ -199,7 +199,8 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
           }
         }
       }
-    } catch {
+    } catch (error) {
+      console.error('❌ Error during hydration:', error);
     } finally {
       setIsLoading(false);
     }
