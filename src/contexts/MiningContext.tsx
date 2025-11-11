@@ -189,14 +189,17 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
             setCurrentMultiplier(multiplier);
 
             if (rem > 0) {
-              const elapsedTokens = effectiveTokens(elapsed, multiplier);
+              // Cap elapsed time at duration
+              const cappedElapsed = Math.min(elapsed, duration);
+              const elapsedTokens = effectiveTokens(cappedElapsed, multiplier);
               setLiveTokens(elapsedTokens);
               tickStart(startTs, duration, multiplier, 0);
               setHasUnclaimedRewards(false);
             } else {
               // Mining finished but not claimed yet
               setMiningStatus('inactive');
-              const elapsedTokens = effectiveTokens(elapsed, multiplier);
+              // Use full duration for completed mining
+              const elapsedTokens = effectiveTokens(duration, multiplier);
               setLiveTokens(elapsedTokens);
               setHasUnclaimedRewards(true);
               console.log('⏰ Unclaimed rewards detected on login!');
@@ -318,7 +321,8 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
             } else {
               // Mining finished but not claimed
               setMiningStatus('inactive');
-              const elapsedTokens = effectiveTokens(elapsed, multiplier);
+              // Use full duration for completed mining
+              const elapsedTokens = effectiveTokens(duration, multiplier);
               setLiveTokens(elapsedTokens);
               setRemainingSeconds(0);
               setHasUnclaimedRewards(true);
@@ -326,7 +330,9 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
           } else if (miningStatus === 'active') {
             // Already mining - just sync the time from backend to stay accurate
             setRemainingSeconds(rem);
-            const elapsedTokens = effectiveTokens(elapsed, multiplier);
+            // Cap elapsed time at duration to prevent tokens from growing after timer stops
+            const cappedElapsed = Math.min(elapsed, duration);
+            const elapsedTokens = effectiveTokens(cappedElapsed, multiplier);
             setLiveTokens(elapsedTokens);
 
             // Check if mining just finished
@@ -378,7 +384,9 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
     const elapsed = Math.floor((now - startTs) / 1000);
     const rem = Math.max(duration - elapsed, 0);
     setRemainingSeconds(rem);
-    const elapsedTokens = effectiveTokens(elapsed, multiplier);
+    // Cap elapsed time at duration to prevent tokens from growing after timer stops
+    const cappedElapsed = Math.min(elapsed, duration);
+    const elapsedTokens = effectiveTokens(cappedElapsed, multiplier);
     setLiveTokens(startTokens + elapsedTokens);
 
     // Then start the interval
@@ -388,9 +396,12 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
       const rem = Math.max(duration - elapsed, 0);
       setRemainingSeconds(rem);
 
+      // Cap elapsed time at duration to prevent tokens from growing after timer stops
+      const cappedElapsed = Math.min(elapsed, duration);
+
       // add tokens for this second
       setLiveTokens(() => {
-        const elapsedTokens = effectiveTokens(elapsed, multiplier);
+        const elapsedTokens = effectiveTokens(cappedElapsed, multiplier);
         return startTokens + elapsedTokens;
       });
 
