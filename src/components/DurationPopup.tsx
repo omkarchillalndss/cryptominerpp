@@ -6,41 +6,51 @@ import {
   Text,
   StyleSheet,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 
-const DURATIONS = [
-  { h: 1, label: '1 Hour', seconds: 3600 },
-  { h: 2, label: '2 Hours', seconds: 7200 },
-  { h: 4, label: '4 Hours', seconds: 14400 },
-  { h: 12, label: '12 Hours', seconds: 43200 },
-  { h: 24, label: '24 Hours', seconds: 86400 },
-];
+interface Duration {
+  h: number;
+  label: string;
+  seconds: number;
+}
 
-const MULTIPLIER_OPTIONS = [
-  { value: 1, label: '1×', requiresAd: false },
-  { value: 2, label: '2×', requiresAd: true },
-  { value: 3, label: '3×', requiresAd: true },
-  { value: 4, label: '4×', requiresAd: true },
-  { value: 5, label: '5×', requiresAd: true },
-  { value: 6, label: '6×', requiresAd: true },
-];
-
-const BASE_RATE = 0.01;
+interface MultiplierOption {
+  value: number;
+  label: string;
+  requiresAd: boolean;
+}
 
 export const DurationPopup: React.FC<{
   visible: boolean;
   currentMultiplier: number;
+  durations: Duration[];
+  multiplierOptions: MultiplierOption[];
+  baseRate: number;
+  loading?: boolean;
   onClose: () => void;
   onUpgrade: () => void;
   onStart: (seconds: number) => void;
-}> = ({ visible, currentMultiplier, onClose, onUpgrade, onStart }) => {
-  const [selectedDuration, setSelectedDuration] = useState(1);
+}> = ({
+  visible,
+  currentMultiplier,
+  durations,
+  multiplierOptions,
+  baseRate,
+  loading = false,
+  onClose,
+  onUpgrade,
+  onStart,
+}) => {
+  const [selectedDuration, setSelectedDuration] = useState(
+    durations[0]?.h || 1,
+  );
   const [selectedMultiplier, setSelectedMultiplier] =
     useState(currentMultiplier);
 
   const seconds = selectedDuration * 3600;
-  const effectiveRate = BASE_RATE / selectedMultiplier;
+  const effectiveRate = baseRate * selectedMultiplier;
   const reward = seconds * effectiveRate;
   const requiresAd = selectedMultiplier > currentMultiplier;
 
@@ -70,116 +80,125 @@ export const DurationPopup: React.FC<{
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false}>
-              {/* Duration Section */}
-              <View style={styles.section}>
-                <Text style={styles.sectionLabel}>⏱️ Duration</Text>
-                <View style={styles.grid}>
-                  {DURATIONS.map(d => {
-                    const active = selectedDuration === d.h;
-                    return (
-                      <TouchableOpacity
-                        key={d.h}
-                        onPress={() => setSelectedDuration(d.h)}
-                        activeOpacity={0.8}
-                      >
-                        {active ? (
-                          <LinearGradient
-                            colors={['#3b82f6', '#9333ea']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                            style={styles.optionButton}
-                          >
-                            <Text style={styles.optionTextActive}>
-                              {d.label}
-                            </Text>
-                          </LinearGradient>
-                        ) : (
-                          <View style={styles.optionButtonInactive}>
-                            <Text style={styles.optionText}>{d.label}</Text>
-                          </View>
-                        )}
-                      </TouchableOpacity>
-                    );
-                  })}
+              {loading ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="large" color="#fff" />
+                  <Text style={styles.loadingText}>Loading options...</Text>
                 </View>
-              </View>
-
-              {/* Multiplier Section */}
-              <View style={styles.section}>
-                <Text style={styles.sectionLabel}>⚡ Multiplier</Text>
-                <View style={styles.grid}>
-                  {MULTIPLIER_OPTIONS.map(m => {
-                    const active = selectedMultiplier === m.value;
-                    const locked = m.value > currentMultiplier;
-                    return (
-                      <TouchableOpacity
-                        key={m.value}
-                        onPress={() =>
-                          !locked && setSelectedMultiplier(m.value)
-                        }
-                        activeOpacity={0.8}
-                        disabled={locked}
-                      >
-                        {active ? (
-                          <LinearGradient
-                            colors={['#fbbf24', '#f97316']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                            style={styles.optionButton}
+              ) : (
+                <>
+                  {/* Duration Section */}
+                  <View style={styles.section}>
+                    <Text style={styles.sectionLabel}>⏱️ Duration</Text>
+                    <View style={styles.grid}>
+                      {durations.map(d => {
+                        const active = selectedDuration === d.h;
+                        return (
+                          <TouchableOpacity
+                            key={d.h}
+                            onPress={() => setSelectedDuration(d.h)}
+                            activeOpacity={0.8}
                           >
-                            <Text style={styles.optionTextActive}>
-                              {m.label}
-                            </Text>
-                            {m.requiresAd && (
-                              <Text style={styles.adBadge}>📺 Ad</Text>
+                            {active ? (
+                              <LinearGradient
+                                colors={['#3b82f6', '#9333ea']}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 1 }}
+                                style={styles.optionButton}
+                              >
+                                <Text style={styles.optionTextActive}>
+                                  {d.label}
+                                </Text>
+                              </LinearGradient>
+                            ) : (
+                              <View style={styles.optionButtonInactive}>
+                                <Text style={styles.optionText}>{d.label}</Text>
+                              </View>
                             )}
-                          </LinearGradient>
-                        ) : (
-                          <View
-                            style={[
-                              styles.optionButtonInactive,
-                              locked && styles.optionButtonLocked,
-                            ]}
-                          >
-                            <Text
-                              style={[
-                                styles.optionText,
-                                locked && styles.optionTextLocked,
-                              ]}
-                            >
-                              {m.label}
-                            </Text>
-                            {m.requiresAd && (
-                              <Text style={styles.adBadge}>📺 Ad</Text>
-                            )}
-                          </View>
-                        )}
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-                {requiresAd && (
-                  <Text style={styles.adNote}>
-                    📺 Watch an ad to unlock this multiplier
-                  </Text>
-                )}
-              </View>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  </View>
 
-              {/* Reward Box */}
-              <View style={styles.rewardBox}>
-                <View style={styles.rewardRow}>
-                  <Text style={styles.rewardLabel}>Estimated Reward:</Text>
-                  <Text style={styles.rewardValue}>
-                    {reward.toFixed(4)} tokens
-                  </Text>
-                </View>
-                <View style={styles.rewardRow}>
-                  <Text style={styles.rewardLabel}>Effective Rate:</Text>
-                  <Text style={styles.rewardValueSmall}>
-                    {effectiveRate.toFixed(6)} tokens/sec
-                  </Text>
-                </View>
-              </View>
+                  {/* Multiplier Section */}
+                  <View style={styles.section}>
+                    <Text style={styles.sectionLabel}>⚡ Multiplier</Text>
+                    <View style={styles.grid}>
+                      {multiplierOptions.map(m => {
+                        const active = selectedMultiplier === m.value;
+                        const locked = m.value > currentMultiplier;
+                        return (
+                          <TouchableOpacity
+                            key={m.value}
+                            onPress={() =>
+                              !locked && setSelectedMultiplier(m.value)
+                            }
+                            activeOpacity={0.8}
+                            disabled={locked}
+                          >
+                            {active ? (
+                              <LinearGradient
+                                colors={['#fbbf24', '#f97316']}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 1 }}
+                                style={styles.optionButton}
+                              >
+                                <Text style={styles.optionTextActive}>
+                                  {m.label}
+                                </Text>
+                                {m.requiresAd && (
+                                  <Text style={styles.adBadge}>📺 Ad</Text>
+                                )}
+                              </LinearGradient>
+                            ) : (
+                              <View
+                                style={[
+                                  styles.optionButtonInactive,
+                                  locked && styles.optionButtonLocked,
+                                ]}
+                              >
+                                <Text
+                                  style={[
+                                    styles.optionText,
+                                    locked && styles.optionTextLocked,
+                                  ]}
+                                >
+                                  {m.label}
+                                </Text>
+                                {m.requiresAd && (
+                                  <Text style={styles.adBadge}>📺 Ad</Text>
+                                )}
+                              </View>
+                            )}
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                    {requiresAd && (
+                      <Text style={styles.adNote}>
+                        📺 Watch an ad to unlock this multiplier
+                      </Text>
+                    )}
+                  </View>
+
+                  {/* Reward Box */}
+                  <View style={styles.rewardBox}>
+                    <View style={styles.rewardRow}>
+                      <Text style={styles.rewardLabel}>Estimated Reward:</Text>
+                      <Text style={styles.rewardValue}>
+                        {reward.toFixed(4)} tokens
+                      </Text>
+                    </View>
+                    <View style={styles.rewardRow}>
+                      <Text style={styles.rewardLabel}>Effective Rate:</Text>
+                      <Text style={styles.rewardValueSmall}>
+                        {effectiveRate.toFixed(6)} tokens/sec
+                      </Text>
+                    </View>
+                  </View>
+                </>
+              )}
             </ScrollView>
 
             {/* Buttons */}
@@ -377,5 +396,15 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 48,
+  },
+  loadingText: {
+    color: '#e9d5ff',
+    fontSize: 14,
+    marginTop: 16,
   },
 });

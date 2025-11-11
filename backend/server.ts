@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { connectDB } from './db';
 import users from './routes/users';
 import mining from './routes/mining';
+import config from './routes/config';
 
 dotenv.config();
 
@@ -14,6 +15,7 @@ async function main() {
   app.use(express.json());
   app.use('/api/users', users);
   app.use('/api/mining', mining);
+  app.use('/api/config', config);
   app.get('/health', (_, res) => res.json({ ok: true }));
   const port = Number(process.env.PORT || 3000);
   app.listen(port, () => console.log(`Server listening on :${port} ✅`));

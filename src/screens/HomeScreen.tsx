@@ -24,6 +24,8 @@ export default function HomeScreen({ navigation }: any) {
     walletBalance,
     logout,
     hasUnclaimedRewards,
+    config,
+    configLoading,
   } = useMining();
   const [popup, setPopup] = useState(false);
 
@@ -212,6 +214,10 @@ export default function HomeScreen({ navigation }: any) {
         <DurationPopup
           visible={popup}
           currentMultiplier={currentMultiplier}
+          durations={config.durations}
+          multiplierOptions={config.multiplierOptions}
+          baseRate={config.baseRate}
+          loading={configLoading}
           onClose={() => setPopup(false)}
           onUpgrade={() => {
             setPopup(false);

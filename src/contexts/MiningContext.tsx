@@ -12,6 +12,24 @@ import { api } from '../services/api';
 
 type MiningStatus = 'active' | 'inactive';
 
+interface Duration {
+  h: number;
+  label: string;
+  seconds: number;
+}
+
+interface MultiplierOption {
+  value: number;
+  label: string;
+  requiresAd: boolean;
+}
+
+interface MiningConfig {
+  durations: Duration[];
+  multiplierOptions: MultiplierOption[];
+  baseRate: number;
+}
+
 interface MiningContextType {
   walletAddress: string;
   setWalletAddress: (addr: string) => Promise<void>;
@@ -25,6 +43,8 @@ interface MiningContextType {
   liveTokens: number;
   isLoading: boolean;
   hasUnclaimedRewards: boolean;
+  config: MiningConfig;
+  configLoading: boolean;
   startMining: (durationSeconds: number) => Promise<void>;
   stopMining: () => Promise<void>;
   upgradeMultiplier: () => Promise<void>;
@@ -62,6 +82,12 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
   const [liveTokens, setLiveTokens] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [hasUnclaimedRewards, setHasUnclaimedRewards] = useState(false);
+  const [config, setConfig] = useState<MiningConfig>({
+    durations: [],
+    multiplierOptions: [],
+    baseRate: 0.01,
+  });
+  const [configLoading, setConfigLoading] = useState(true);
 
   // Wrapper to persist wallet address when set
   const setWalletAddress = async (addr: string) => {
@@ -89,13 +115,13 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
   const effectiveRate = useMemo(() => {
     // Correct formula: Effective Rate = Base Rate × Multiplier
     // Example: 0.01 * 3 = 0.03 tokens/sec
-    return BASE_RATE * currentMultiplier;
-  }, [currentMultiplier]);
+    return config.baseRate * currentMultiplier;
+  }, [currentMultiplier, config.baseRate]);
 
   const effectiveTokens = (elapsedSeconds: number, multiplier: number) => {
-    // Correct calculation: BASE_RATE * multiplier * seconds
+    // Correct calculation: baseRate * multiplier * seconds
     // Example: 0.01 * 3 * 14400 = 432 tokens for 4 hours with 3x multiplier
-    const rate = BASE_RATE * multiplier;
+    const rate = config.baseRate * multiplier;
     return rate * elapsedSeconds;
   };
 
@@ -215,7 +241,44 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  const fetchConfig = async () => {
+    try {
+      console.log('🔧 Fetching mining config from backend...');
+      const res = await api.get('/api/config');
+      setConfig({
+        durations: res.data.durations,
+        multiplierOptions: res.data.multiplierOptions,
+        baseRate: res.data.baseRate,
+      });
+      console.log('✅ Config loaded:', res.data);
+    } catch (error) {
+      console.error('❌ Failed to fetch config:', error);
+      // Use default config if fetch fails
+      setConfig({
+        durations: [
+          { h: 1, label: '1 Hour', seconds: 3600 },
+          { h: 2, label: '2 Hours', seconds: 7200 },
+          { h: 4, label: '4 Hours', seconds: 14400 },
+          { h: 12, label: '12 Hours', seconds: 43200 },
+          { h: 24, label: '24 Hours', seconds: 86400 },
+        ],
+        multiplierOptions: [
+          { value: 1, label: '1×', requiresAd: false },
+          { value: 2, label: '2×', requiresAd: true },
+          { value: 3, label: '3×', requiresAd: true },
+          { value: 4, label: '4×', requiresAd: true },
+          { value: 5, label: '5×', requiresAd: true },
+          { value: 6, label: '6×', requiresAd: true },
+        ],
+        baseRate: 0.01,
+      });
+    } finally {
+      setConfigLoading(false);
+    }
+  };
+
   useEffect(() => {
+    fetchConfig();
     hydrate();
   }, []);
 
@@ -511,6 +574,8 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
     liveTokens,
     isLoading,
     hasUnclaimedRewards,
+    config,
+    configLoading,
     startMining,
     stopMining,
     upgradeMultiplier,
