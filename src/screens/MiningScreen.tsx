@@ -221,7 +221,6 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
-    paddingTop: 32,
     zIndex: 10,
   },
   backButton: {
@@ -232,7 +231,6 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 16,
     alignSelf: 'flex-start',
-    marginBottom: 16,
   },
   backButtonText: {
     color: '#fff',
@@ -241,14 +239,14 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: 17,
   },
   miningIcon: {
     fontSize: 48,
-    marginBottom: 16,
+    marginBottom: 10,
   },
   mainTitle: {
-    fontSize: 40,
+    fontSize: 35,
     fontWeight: '700',
     color: '#fff',
     textAlign: 'center',
@@ -269,8 +267,8 @@ const styles = StyleSheet.create({
   },
   timerCard: {
     borderRadius: 16,
-    padding: 24,
-    marginBottom: 24,
+    padding: 5,
+    marginBottom: 17,
     position: 'relative',
     overflow: 'hidden',
     alignItems: 'center',
@@ -300,13 +298,13 @@ const styles = StyleSheet.create({
   },
   timerLabel: {
     color: 'rgba(191, 219, 254, 1)',
-    fontSize: 14,
+    fontSize: 16,
     marginBottom: 8,
     zIndex: 10,
   },
   timerValue: {
     color: '#fff',
-    fontSize: 56,
+    fontSize: 35,
     fontWeight: '700',
     fontVariant: ['tabular-nums'],
     zIndex: 10,
@@ -316,8 +314,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 16,
-    padding: 16,
-    marginBottom: 24,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    marginBottom: 17,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.3,
@@ -328,11 +327,12 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: '700',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   progressContainer: {
     position: 'relative',
-    marginBottom: 16,
+    marginBottom: 13,
+    paddingVertical: 6,
   },
   progressOverlay: {
     position: 'absolute',
@@ -344,8 +344,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   progressText: {
-    color: '#fff',
-    fontSize: 12,
+    color: '#838282ff',
+    fontSize: 15,
     fontWeight: '700',
   },
   progressInfo: {
@@ -353,7 +353,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 12,
-    padding: 16,
+    padding: 5,
     alignItems: 'center',
   },
   progressInfoLabel: {
@@ -368,8 +368,8 @@ const styles = StyleSheet.create({
   },
   tokensCard: {
     borderRadius: 16,
-    padding: 10,
-    marginBottom: 24,
+    padding: 9,
+    marginBottom: 17,
     position: 'relative',
     overflow: 'hidden',
     alignItems: 'center',
@@ -381,13 +381,12 @@ const styles = StyleSheet.create({
   },
   tokensIcon: {
     fontSize: 48,
-    marginBottom: 8,
+    marginBottom: 3,
     zIndex: 10,
   },
   tokensLabel: {
     color: 'rgba(254, 243, 199, 1)',
     fontSize: 14,
-    marginBottom: 8,
     zIndex: 10,
   },
   tokensValue: {
@@ -399,8 +398,8 @@ const styles = StyleSheet.create({
   },
   tokensTotal: {
     color: 'rgba(254, 243, 199, 1)',
-    fontSize: 12,
-    marginTop: 8,
+    fontSize: 17,
+
     zIndex: 10,
   },
   infoCard: {
@@ -408,8 +407,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 16,
-    padding: 16,
-    marginBottom: 24,
+    padding: 10,
+    marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.2,
@@ -426,7 +425,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 12,
-    padding: 16,
+    padding: 9,
     alignItems: 'center',
   },
   infoLabel: {
