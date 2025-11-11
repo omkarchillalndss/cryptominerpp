@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
+import LottieView from 'lottie-react-native';
 import { useMining } from '../contexts/MiningContext';
 import { DurationPopup } from '../components/DurationPopup';
 
@@ -160,7 +161,12 @@ export default function HomeScreen({ navigation }: any) {
                   activeOpacity={0.8}
                   style={styles.centerContent}
                 >
-                  <Text style={styles.miningIcon}>⛏️</Text>
+                  <LottieView
+                    source={require('../assets/bitcoin_loader.json')}
+                    autoPlay
+                    loop
+                    style={styles.lottieAnimation}
+                  />
                   <Text style={styles.miningMessage}>
                     Mining in progress... Tap to view
                   </Text>
@@ -374,8 +380,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 16,
   },
-  miningIcon: {
-    fontSize: 48,
+  lottieAnimation: {
+    width: 160,
+    height: 160,
     marginBottom: 12,
   },
   miningMessage: {
