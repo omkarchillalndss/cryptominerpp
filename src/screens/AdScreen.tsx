@@ -1,23 +1,119 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
+import {
+  RewardedAd,
+  RewardedAdEventType,
+  TestIds,
+} from 'react-native-google-mobile-ads';
 import { useMining } from '../contexts/MiningContext';
+
+// ✅ ADMOB REWARDED AD UNIT ID - CONFIGURED ✅
+// Development: Uses TestIds.REWARDED (test ads)
+// Production: Uses your actual Ad Unit ID from AdMob console
+// Your Ad Unit ID: ca-app-pub-7930332952469106/6559535492
+const REWARDED_AD_UNIT_ID = __DEV__
+  ? TestIds.REWARDED // Test ad for development
+  : 'ca-app-pub-7930332952469106/6559535492'; // ✅ YOUR PRODUCTION AD UNIT ID
+
+let rewardedAd: RewardedAd | null = null;
 
 export default function AdScreen({ navigation }: any) {
   const { upgradeMultiplier } = useMining();
-  const [left, setLeft] = useState(10);
+  const [adLoaded, setAdLoaded] = useState(false);
+  const [adShown, setAdShown] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const i = setInterval(() => setLeft(p => p - 1), 1000);
-    return () => clearInterval(i);
+    // Create and load the ad when component mounts
+    rewardedAd = RewardedAd.createForAdRequest(REWARDED_AD_UNIT_ID);
+
+    const unsubscribeLoaded = rewardedAd.addAdEventListener(
+      RewardedAdEventType.LOADED,
+      () => {
+        console.log('✅ Rewarded ad loaded');
+        setAdLoaded(true);
+        setLoading(false);
+      },
+    );
+
+    const unsubscribeEarned = rewardedAd.addAdEventListener(
+      RewardedAdEventType.EARNED_REWARD,
+      reward => {
+        console.log('🎁 User earned reward:', reward);
+        setAdShown(true);
+        // Upgrade multiplier after user earns reward
+        upgradeMultiplier()
+          .then(() => {
+            console.log('✅ Multiplier upgraded');
+            // Navigate back safely
+            if (navigation.canGoBack()) {
+              navigation.goBack();
+            } else {
+              navigation.navigate('Home');
+            }
+          })
+          .catch(error => {
+            console.error('❌ Failed to upgrade multiplier:', error);
+            Alert.alert('Error', 'Failed to upgrade multiplier');
+            // Navigate back safely
+            if (navigation.canGoBack()) {
+              navigation.goBack();
+            } else {
+              navigation.navigate('Home');
+            }
+          });
+      },
+    );
+
+    // Load the ad
+    rewardedAd.load();
+
+    return () => {
+      unsubscribeLoaded();
+      unsubscribeEarned();
+    };
   }, []);
 
   useEffect(() => {
-    if (left <= 0) {
-      upgradeMultiplier().finally(() => navigation.goBack());
+    // Show ad when it's loaded
+    if (adLoaded && !adShown && rewardedAd) {
+      rewardedAd
+        .show()
+        .then(() => {
+          console.log('📺 Ad shown successfully');
+          // If ad was shown but user didn't earn reward, go back
+          setTimeout(() => {
+            if (!adShown) {
+              Alert.alert(
+                'Ad Not Completed',
+                'You need to watch the full ad to unlock the multiplier boost.',
+              );
+              // Navigate back safely
+              if (navigation.canGoBack()) {
+                navigation.goBack();
+              } else {
+                navigation.navigate('Home');
+              }
+            }
+          }, 1000);
+        })
+        .catch(error => {
+          console.error('❌ Failed to show ad:', error);
+          Alert.alert(
+            'Ad Unavailable',
+            'Failed to show ad. Please try again later.',
+          );
+          // Navigate back safely
+          if (navigation.canGoBack()) {
+            navigation.goBack();
+          } else {
+            navigation.navigate('Home');
+          }
+        });
     }
-  }, [left]);
+  }, [adLoaded, adShown]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -31,24 +127,21 @@ export default function AdScreen({ navigation }: any) {
 
         <View style={styles.content}>
           <Text style={styles.icon}>📺</Text>
-          <Text style={styles.title}>Advertisement</Text>
+          <Text style={styles.title}>
+            {loading ? 'Loading Ad...' : 'Showing Ad'}
+          </Text>
           <Text style={styles.subtitle}>
-            Watching ad to unlock multiplier boost
+            {loading
+              ? 'Please wait while we load the advertisement'
+              : 'Watch the full ad to unlock multiplier boost'}
           </Text>
 
-          <View style={styles.timerContainer}>
-            <Text style={styles.timerValue}>{Math.max(0, left)}</Text>
-            <Text style={styles.timerLabel}>seconds remaining</Text>
-          </View>
-
-          <View style={styles.progressBar}>
-            <View
-              style={[
-                styles.progressFill,
-                { width: `${((10 - left) / 10) * 100}%` },
-              ]}
-            />
-          </View>
+          {loading && (
+            <View style={styles.loadingContainer}>
+              <View style={styles.spinner} />
+              <Text style={styles.loadingText}>Loading...</Text>
+            </View>
+          )}
         </View>
       </LinearGradient>
     </SafeAreaView>
@@ -104,31 +197,21 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 48,
   },
-  timerContainer: {
+  loadingContainer: {
     alignItems: 'center',
-    marginBottom: 32,
+    marginTop: 48,
   },
-  timerValue: {
-    fontSize: 72,
-    fontWeight: '700',
-    color: '#fff',
-    fontVariant: ['tabular-nums'],
+  spinner: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 4,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderTopColor: '#fff',
   },
-  timerLabel: {
+  loadingText: {
     fontSize: 14,
     color: '#e9d5ff',
-    marginTop: 8,
-  },
-  progressBar: {
-    width: 200,
-    height: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#10b981',
-    borderRadius: 4,
+    marginTop: 16,
   },
 });
