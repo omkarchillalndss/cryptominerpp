@@ -83,21 +83,7 @@ export default function AdScreen({ navigation }: any) {
         .show()
         .then(() => {
           console.log('📺 Ad shown successfully');
-          // If ad was shown but user didn't earn reward, go back
-          setTimeout(() => {
-            if (!adShown) {
-              Alert.alert(
-                'Ad Not Completed',
-                'You need to watch the full ad to unlock the multiplier boost.',
-              );
-              // Navigate back safely
-              if (navigation.canGoBack()) {
-                navigation.goBack();
-              } else {
-                navigation.navigate('Home');
-              }
-            }
-          }, 1000);
+          // Ad is now showing, EARNED_REWARD event will handle completion
         })
         .catch(error => {
           console.error('❌ Failed to show ad:', error);
