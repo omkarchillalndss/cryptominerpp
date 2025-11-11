@@ -41,7 +41,7 @@ export default function MiningScreen({ navigation }: any) {
 
   const durationHours = selectedDuration / 3600;
   const baseRate = 0.01;
-  const effectiveRate = baseRate * currentMultiplier; // Correct: multiply by multiplier
+  const effectiveRate = baseRate * currentMultiplier;
   const totalReward = effectiveRate * selectedDuration;
 
   return (
