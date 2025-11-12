@@ -22,14 +22,24 @@ export const start = async (req: Request, res: Response) => {
     { $set: { status: 'claimed' } },
   );
 
-  // Get user's current total balance
-  const user = await User.findOne({ walletAddress });
-  const totalCoins = user?.totalBalance ?? 0;
+  // Get totalCoins from the most recent session (source of truth for display)
+  const previousSession = await MiningSession.findOne({ walletAddress })
+    .sort({ createdAt: -1 });
+  
+  let totalCoins = 0;
+  if (previousSession) {
+    // Carry forward totalCoins from previous session
+    totalCoins = previousSession.totalCoins;
+  } else {
+    // First session: use User's totalBalance if it exists
+    const user = await User.findOne({ walletAddress });
+    totalCoins = user?.totalBalance ?? 0;
+  }
 
   const now = new Date();
   const ms = await MiningSession.create({
     walletAddress,
-    totalCoins, // Total mining balance (all-time)
+    totalCoins, // Carry forward from previous session
     currentMiningPoints: 0, // Current session starts at 0
     multiplier: clampMultiplier(multiplier ?? 1, MAX_MULTIPLIER),
     miningStartTime: now,
@@ -78,16 +88,16 @@ export const claim = async (req: Request, res: Response) => {
   // Calculate tokens earned in this session
   const awarded = computeReward(elapsedSec, session.multiplier);
 
-  // Update user's total balance
+  // Update user's total balance (single source of truth)
   const user = await User.findOneAndUpdate(
     { walletAddress },
     { $inc: { totalBalance: awarded } },
     { new: true, upsert: true },
   );
 
-  // Update session with final values
+  // Update session: when status becomes 'claimed', totalCoins = totalCoins + currentMiningPoints
   session.currentMiningPoints = awarded; // Tokens earned in this session
-  session.totalCoins = user?.totalBalance ?? awarded; // Updated total balance
+  session.totalCoins = session.totalCoins + awarded; // Add currentMiningPoints to totalCoins
   session.status = 'claimed';
   await session.save();
 

@@ -209,6 +209,23 @@ export default function HomeScreen({ navigation }: any) {
               </View>
             </View>
           </View>
+
+          {/* Leaderboard Button */}
+          <TouchableOpacity
+            onPress={() => navigation.navigate('LeaderBoard')}
+            activeOpacity={0.8}
+            style={{ marginTop: 24, alignSelf: 'center' }}
+          >
+            <LinearGradient
+              colors={['#f59e0b', '#d97706']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.actionButton}
+            >
+              <Text>🏆</Text>
+              <Text>View Leaderboard</Text>
+            </LinearGradient>
+          </TouchableOpacity>
         </ScrollView>
 
         <DurationPopup

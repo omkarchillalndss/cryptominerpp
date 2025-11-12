@@ -21,8 +21,16 @@ export const getUser = async (req: Request, res: Response) => {
     status: 'mining',
   }).sort({ miningStartTime: -1 });
   
+  // Get totalCoins from the most recent MiningSession (source of truth for display)
+  const latestSession = await MiningSession.findOne({ walletAddress })
+    .sort({ createdAt: -1 });
+  
+  const totalBalance = latestSession?.totalCoins ?? (user as any).totalBalance ?? 0;
+  
   const response: any = {
     ...user.toObject(),
+    totalBalance, // Use totalCoins from latest MiningSession
+    walletBalance: totalBalance, // Same as totalBalance for now
     miningStatus: activeSession ? 'active' : 'inactive',
   };
   
