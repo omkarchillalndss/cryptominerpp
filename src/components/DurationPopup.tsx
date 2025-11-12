@@ -281,11 +281,14 @@ const styles = StyleSheet.create({
     color: '#e9d5ff',
     fontWeight: '700',
     marginBottom: 12,
+    justifyContent: 'center',
+    textAlign: 'center',
   },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
+    justifyContent: 'center',
   },
   optionButton: {
     paddingVertical: 12,
