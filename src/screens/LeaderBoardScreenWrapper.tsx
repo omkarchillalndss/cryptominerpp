@@ -35,14 +35,20 @@ export default function LeaderBoardScreenWrapper({ navigation }: any) {
       console.log('✅ Leaderboard data received:', response.data);
 
       // Transform and rank users
-      const leaderboardData = response.data.map((user: any, index: number) => ({
-        id: user.walletAddress,
-        name: `${user.walletAddress.slice(0, 6)}...${user.walletAddress.slice(
-          -4,
-        )}`,
-        points: user.totalCoins || 0,
-        rank: index + 1,
-      }));
+      const leaderboardData = response.data.map((user: any, index: number) => {
+        const walletAddress = user.walletAddress;
+        const displayName =
+          walletAddress && walletAddress.length > 10
+            ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`
+            : walletAddress;
+
+        return {
+          id: walletAddress,
+          name: displayName,
+          points: user.totalCoins || 0,
+          rank: index + 1,
+        };
+      });
 
       setUsers(leaderboardData);
       console.log(`✅ Loaded ${leaderboardData.length} users to leaderboard`);
