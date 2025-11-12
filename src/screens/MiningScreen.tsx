@@ -103,12 +103,6 @@ export default function MiningScreen({ navigation }: any) {
                 </Text>
               </View>
             </View>
-            <View style={styles.progressInfo}>
-              <Text style={styles.progressInfoLabel}>Progress</Text>
-              <Text style={styles.progressInfoValue}>
-                {(Math.min(progress, 1) * 100).toFixed(1)}%
-              </Text>
-            </View>
           </View>
 
           {/* Tokens Mined Card */}
