@@ -38,6 +38,7 @@ class NotificationService {
       const trigger: any = {
         type: 1, // TimeTrigger
         timestamp: Date.now() + durationSeconds * 1000,
+        
       };
 
       const notificationId = await notifee.createTriggerNotification(

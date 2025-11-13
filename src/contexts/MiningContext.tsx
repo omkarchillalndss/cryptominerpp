@@ -145,100 +145,125 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
     console.log('🔄 Hydrating app state...');
 
     try {
+      console.log('📦 Reading from AsyncStorage...');
       const raw = await AsyncStorage.getItem(STORAGE_KEY);
+
       if (!raw) {
-        console.log('❌ No saved state found');
+        console.log('❌ No saved state found - first time user');
+        setIsLoading(false);
         return;
       }
 
+      console.log('✅ Saved state found, parsing...');
       const saved: Persisted = JSON.parse(raw);
       const walletAddr = saved.walletAddress || '';
       console.log('💼 Wallet address found:', walletAddr);
       setWalletAddressState(walletAddr);
 
-      // If wallet address exists, sync with backend (with timeout)
-      if (walletAddr) {
-        try {
-          console.log('🌐 Fetching user data from backend...');
+      // Load local state immediately (don't wait for backend)
+      console.log('📱 Loading local state immediately...');
+      setMiningStatus(saved.miningStatus);
+      setSelectedDuration(saved.selectedDuration);
+      setCurrentMultiplier(saved.multiplier || 1);
+      setLiveTokens(saved.liveTokens || 0);
 
-          // Add timeout to prevent hanging
-          const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('Backend timeout')), 3000),
+      // If mining was active, restart the ticker with local data
+      if (saved.miningStatus === 'active') {
+        const elapsed = Math.floor((Date.now() - saved.startTimestamp) / 1000);
+        const rem = Math.max(saved.selectedDuration - elapsed, 0);
+        setRemainingSeconds(rem);
+
+        if (rem > 0) {
+          console.log('⛏️ Resuming active mining session...');
+          tickStart(
+            saved.startTimestamp,
+            saved.selectedDuration,
+            saved.multiplier,
+            0,
           );
-
-          const res = (await Promise.race([
-            api.get(`/api/users/${walletAddr}`),
-            timeoutPromise,
-          ])) as any;
-
-          console.log('✅ Backend response:', res.data);
-          setTotalBalance(res.data.totalBalance ?? 0);
-          setWalletBalance(
-            res.data.walletBalance ?? res.data.totalBalance ?? 0,
-          );
-
-          // Sync mining status from backend
-          if (res.data.miningStatus === 'active' && res.data.miningStartTime) {
-            console.log('⛏️ Active mining session found!');
-            const startTs = new Date(res.data.miningStartTime).getTime();
-            const duration = (res.data.selectedHour ?? 1) * 3600;
-            const multiplier = res.data.multiplier ?? 1;
-            const elapsed = Math.floor((Date.now() - startTs) / 1000);
-            const rem = Math.max(duration - elapsed, 0);
-
-            setMiningStatus('active');
-            setSelectedDuration(duration);
-            setRemainingSeconds(rem);
-            setCurrentMultiplier(multiplier);
-
-            if (rem > 0) {
-              // Cap elapsed time at duration
-              const cappedElapsed = Math.min(elapsed, duration);
-              const elapsedTokens = effectiveTokens(cappedElapsed, multiplier);
-              setLiveTokens(elapsedTokens);
-              tickStart(startTs, duration, multiplier, 0);
-              setHasUnclaimedRewards(false);
-            } else {
-              // Mining finished but not claimed yet
-              setMiningStatus('inactive');
-              // Use full duration for completed mining
-              const elapsedTokens = effectiveTokens(duration, multiplier);
-              setLiveTokens(elapsedTokens);
-              setHasUnclaimedRewards(true);
-              console.log('⏰ Unclaimed rewards detected on login!');
-            }
-          } else {
-            // Not mining on backend, use local state
-            setMiningStatus(saved.miningStatus);
-            setSelectedDuration(saved.selectedDuration);
-            setCurrentMultiplier(saved.multiplier || 1);
-            setLiveTokens(saved.liveTokens || 0);
-            setHasUnclaimedRewards(false);
-          }
-        } catch (error) {
-          console.error('Failed to sync with backend:', error);
-          // Fallback to local state if backend fails
-          setMiningStatus(saved.miningStatus);
-          setSelectedDuration(saved.selectedDuration);
-          setCurrentMultiplier(saved.multiplier || 1);
-          setLiveTokens(saved.liveTokens || 0);
-
-          if (saved.miningStatus === 'active') {
-            const elapsed = Math.floor(
-              (Date.now() - saved.startTimestamp) / 1000,
-            );
-            const rem = Math.max(saved.selectedDuration - elapsed, 0);
-            setRemainingSeconds(rem);
-            if (rem > 0)
-              tickStart(
-                saved.startTimestamp,
-                saved.selectedDuration,
-                saved.multiplier,
-                saved.liveTokens,
-              );
-            else setMiningStatus('inactive');
-          }
+        } else {
+          console.log('⏰ Mining completed while app was closed');
+          setMiningStatus('inactive');
+          setHasUnclaimedRewards(true);
         }
+      }
+
+      // Sync with backend in background (non-blocking)
+      if (walletAddr) {
+        console.log('🌐 Starting background sync with backend...');
+
+        // Don't await - let this happen in background
+        (async () => {
+          try {
+            const timeoutPromise = new Promise((_, reject) =>
+              setTimeout(() => reject(new Error('Backend timeout')), 3000),
+            );
+
+            const res = (await Promise.race([
+              api.get(`/api/users/${walletAddr}`),
+              timeoutPromise,
+            ])) as any;
+
+            console.log('✅ Backend sync complete:', res.data);
+            setTotalBalance(res.data.totalBalance ?? 0);
+            setWalletBalance(
+              res.data.walletBalance ?? res.data.totalBalance ?? 0,
+            );
+
+            // Update mining status if backend has different data
+            if (
+              res.data.miningStatus === 'active' &&
+              res.data.miningStartTime
+            ) {
+              const startTs = new Date(res.data.miningStartTime).getTime();
+              const duration = (res.data.selectedHour ?? 1) * 3600;
+              const multiplier = res.data.multiplier ?? 1;
+              const elapsed = Math.floor((Date.now() - startTs) / 1000);
+              const rem = Math.max(duration - elapsed, 0);
+
+              // Only update if significantly different from local state
+              if (Math.abs(saved.startTimestamp - startTs) > 5000) {
+                console.log(
+                  '🔄 Backend has different mining data, updating...',
+                );
+                setMiningStatus('active');
+                setSelectedDuration(duration);
+                setRemainingSeconds(rem);
+                setCurrentMultiplier(multiplier);
+
+                if (rem > 0) {
+                  const cappedElapsed = Math.min(elapsed, duration);
+                  const elapsedTokens = effectiveTokens(
+                    cappedElapsed,
+                    multiplier,
+                  );
+                  setLiveTokens(elapsedTokens);
+                  tickStart(startTs, duration, multiplier, 0);
+                  setHasUnclaimedRewards(false);
+                } else {
+                  setMiningStatus('inactive');
+                  const elapsedTokens = effectiveTokens(duration, multiplier);
+                  setLiveTokens(elapsedTokens);
+                  setHasUnclaimedRewards(true);
+                }
+              }
+            } else if (
+              res.data.miningStatus === 'inactive' &&
+              saved.miningStatus === 'active'
+            ) {
+              console.log(
+                '🛑 Backend says mining stopped, updating local state',
+              );
+              setMiningStatus('inactive');
+              setHasUnclaimedRewards(false);
+            }
+          } catch (error) {
+            console.warn(
+              '⚠️ Background sync failed (using local data):',
+              error,
+            );
+          }
+        })();
       }
     } catch (error) {
       console.error('❌ Error during hydration:', error);
@@ -284,20 +309,34 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   useEffect(() => {
+    console.log('🚀 MiningContext initializing...');
+
     // Run both in parallel and don't wait for config to finish loading
     fetchConfig(); // Non-blocking
 
     // Set a maximum timeout for hydration to prevent infinite splash screen
     const maxLoadTimeout = setTimeout(() => {
-      console.warn('⚠️ Hydration timeout - forcing app to load');
+      console.warn('⚠️ Hydration timeout (2s) - forcing app to load');
       setIsLoading(false);
-    }, 5000); // Max 5 seconds on splash screen
+    }, 2000); // Max 2 seconds for hydration
 
-    hydrate().finally(() => {
+    // Start hydration
+    hydrate()
+      .then(() => {
+        console.log('✅ Hydration completed successfully');
+      })
+      .catch(err => {
+        console.error('❌ Hydration error:', err);
+      })
+      .finally(() => {
+        console.log('🏁 Hydration finally block - clearing timeout');
+        clearTimeout(maxLoadTimeout);
+      });
+
+    return () => {
+      console.log('🧹 Cleaning up hydration timeout');
       clearTimeout(maxLoadTimeout);
-    });
-
-    return () => clearTimeout(maxLoadTimeout);
+    };
   }, []);
 
   // Real-time sync with backend every 2 seconds for immediate updates

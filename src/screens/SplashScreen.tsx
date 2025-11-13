@@ -37,7 +37,7 @@ export default function SplashScreen({ onFinish }: SplashScreenProps) {
       }),
     ).start();
 
-    // Auto-finish after 2.5 seconds
+    // Auto-finish after 2 seconds
     const timer = setTimeout(() => {
       Animated.parallel([
         Animated.timing(fadeAnim, {
@@ -53,7 +53,7 @@ export default function SplashScreen({ onFinish }: SplashScreenProps) {
       ]).start(() => {
         onFinish();
       });
-    }, 2500);
+    }, 2000);
 
     return () => clearTimeout(timer);
   }, [fadeAnim, scaleAnim, rotateAnim, onFinish]);

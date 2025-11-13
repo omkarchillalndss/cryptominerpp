@@ -12,7 +12,7 @@ import AdScreen from './src/screens/AdScreen';
 import LeaderBoardScreen from './src/screens/LeaderBoardScreenWrapper';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { notificationService } from './src/services/notificationService';
-import notifee, { EventType } from '@notifee/react-native';
+import notifee from '@notifee/react-native';
 
 const Stack = createStackNavigator();
 
@@ -76,14 +76,12 @@ function Root() {
     };
   }, []);
 
-  // Show splash screen on first load
-  if (showInitialSplash) {
-    return <SplashScreen onFinish={() => setShowInitialSplash(false)} />;
-  }
+  // Debug logging
+  console.log('🎬 App State:', { showInitialSplash, isLoading, walletAddress });
 
-  // Show loading splash while hydrating
-  if (isLoading) {
-    return <SplashScreen onFinish={() => {}} />;
+  // Show splash screen while loading (combines initial splash + hydration)
+  if (showInitialSplash || isLoading) {
+    return <SplashScreen onFinish={() => setShowInitialSplash(false)} />;
   }
 
   // Determine initial route based on wallet and mining status
