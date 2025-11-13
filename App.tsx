@@ -31,19 +31,24 @@ function Root() {
         await notificationService.initialize();
         await notificationService.handleBackgroundNotification();
 
-        // Check if app was opened from a notification
+        // Check if app was opened from a notification (when app was killed/closed)
         try {
           const initialNotification = await notifee.getInitialNotification();
+
           if (initialNotification) {
             console.log(
               '📱 App opened from notification:',
               initialNotification,
             );
             const screen = initialNotification.notification.data?.screen;
-            if (screen && navigationRef.current) {
+            console.log('Initial notification screen:', screen);
+            if (screen) {
               // Delay navigation to ensure navigation is ready
               setTimeout(() => {
-                navigationRef.current?.navigate(screen);
+                if (navigationRef.current) {
+                  console.log('🧭 Navigating to:', screen);
+                  navigationRef.current.navigate(screen);
+                }
               }, 1000);
             }
           }

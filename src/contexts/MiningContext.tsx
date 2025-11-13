@@ -145,14 +145,6 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
     console.log('🔄 Hydrating app state...');
 
     try {
-      // Test backend connection
-      try {
-        const healthCheck = await api.get('/health');
-        console.log('✅ Backend is reachable:', healthCheck.data);
-      } catch (error) {
-        console.error('❌ Backend not reachable:', error);
-      }
-
       const raw = await AsyncStorage.getItem(STORAGE_KEY);
       if (!raw) {
         console.log('❌ No saved state found');
@@ -164,11 +156,21 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
       console.log('💼 Wallet address found:', walletAddr);
       setWalletAddressState(walletAddr);
 
-      // If wallet address exists, sync with backend
+      // If wallet address exists, sync with backend (with timeout)
       if (walletAddr) {
         try {
           console.log('🌐 Fetching user data from backend...');
-          const res = await api.get(`/api/users/${walletAddr}`);
+
+          // Add timeout to prevent hanging
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Backend timeout')), 3000),
+          );
+
+          const res = (await Promise.race([
+            api.get(`/api/users/${walletAddr}`),
+            timeoutPromise,
+          ])) as any;
+
           console.log('✅ Backend response:', res.data);
           setTotalBalance(res.data.totalBalance ?? 0);
           setWalletBalance(
@@ -282,8 +284,20 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   useEffect(() => {
-    fetchConfig();
-    hydrate();
+    // Run both in parallel and don't wait for config to finish loading
+    fetchConfig(); // Non-blocking
+
+    // Set a maximum timeout for hydration to prevent infinite splash screen
+    const maxLoadTimeout = setTimeout(() => {
+      console.warn('⚠️ Hydration timeout - forcing app to load');
+      setIsLoading(false);
+    }, 5000); // Max 5 seconds on splash screen
+
+    hydrate().finally(() => {
+      clearTimeout(maxLoadTimeout);
+    });
+
+    return () => clearTimeout(maxLoadTimeout);
   }, []);
 
   // Real-time sync with backend every 2 seconds for immediate updates

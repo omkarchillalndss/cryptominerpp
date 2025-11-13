@@ -5,7 +5,7 @@ console.log('🌐 API Base URL:', API_BASE_URL);
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  timeout: 5000, // Reduced from 10s to 5s for faster failures
 });
 
 api.interceptors.request.use(
@@ -16,7 +16,7 @@ api.interceptors.request.use(
   error => {
     console.error('❌ Request Error:', error);
     return Promise.reject(error);
-  }
+  },
 );
 
 api.interceptors.response.use(
@@ -29,5 +29,5 @@ api.interceptors.response.use(
     console.error('❌ Error details:', err.response?.data || err.message);
     const msg = err?.response?.data?.message || err.message;
     return Promise.reject(new Error(msg));
-  }
+  },
 );
