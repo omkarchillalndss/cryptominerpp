@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import { View, Text, StyleSheet, Alert, AppState } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import {
@@ -22,6 +22,9 @@ export default function AdRewardScreen({ navigation }: any) {
   const [adLoaded, setAdLoaded] = useState(false);
   const [adShown, setAdShown] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [rewardClaimed, setRewardClaimed] = useState(false);
+  const appState = useRef(AppState.currentState);
+  const adShownTime = useRef<number | null>(null);
 
   useEffect(() => {
     // Create and load the ad when component mounts
@@ -41,6 +44,7 @@ export default function AdRewardScreen({ navigation }: any) {
       async reward => {
         console.log('🎁 User earned reward from ad:', reward);
         setAdShown(true);
+        setRewardClaimed(true);
 
         try {
           // Claim the ad reward from backend
@@ -62,11 +66,7 @@ export default function AdRewardScreen({ navigation }: any) {
                 text: 'Awesome!',
                 onPress: () => {
                   // Navigate back to home
-                  if (navigation.canGoBack()) {
-                    navigation.goBack();
-                  } else {
-                    navigation.navigate('Home');
-                  }
+                  navigation.navigate('Home');
                 },
               },
             ],
@@ -89,11 +89,7 @@ export default function AdRewardScreen({ navigation }: any) {
             {
               text: 'OK',
               onPress: () => {
-                if (navigation.canGoBack()) {
-                  navigation.goBack();
-                } else {
-                  navigation.navigate('Home');
-                }
+                navigation.navigate('Home');
               },
             },
           ]);
@@ -117,6 +113,7 @@ export default function AdRewardScreen({ navigation }: any) {
         .show()
         .then(() => {
           console.log('📺 Ad shown successfully');
+          adShownTime.current = Date.now();
         })
         .catch(error => {
           console.error('❌ Failed to show ad:', error);
@@ -127,11 +124,7 @@ export default function AdRewardScreen({ navigation }: any) {
               {
                 text: 'OK',
                 onPress: () => {
-                  if (navigation.canGoBack()) {
-                    navigation.goBack();
-                  } else {
-                    navigation.navigate('Home');
-                  }
+                  navigation.navigate('Home');
                 },
               },
             ],
@@ -139,6 +132,33 @@ export default function AdRewardScreen({ navigation }: any) {
         });
     }
   }, [adLoaded, adShown]);
+
+  // Monitor app state to detect when user closes the ad
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', nextAppState => {
+      // If app comes back to foreground after ad was shown but reward not claimed
+      if (
+        appState.current.match(/inactive|background/) &&
+        nextAppState === 'active' &&
+        adShownTime.current &&
+        !rewardClaimed
+      ) {
+        const timeSinceAdShown = Date.now() - adShownTime.current;
+        // If more than 2 seconds passed, assume ad was closed
+        if (timeSinceAdShown > 2000) {
+          console.log('⚠️ Ad was closed without completion, navigating back');
+          setTimeout(() => {
+            navigation.navigate('Home');
+          }, 500);
+        }
+      }
+      appState.current = nextAppState;
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [rewardClaimed, navigation]);
 
   return (
     <SafeAreaView style={styles.safeArea}>

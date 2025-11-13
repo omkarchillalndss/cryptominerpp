@@ -5,14 +5,16 @@ import { AdReward } from '../models/AdReward';
 const MAX_DAILY_CLAIMS = 6;
 const REWARD_OPTIONS = [10, 20, 30, 40, 50, 60];
 
-const isNewDay = (lastDate: Date): boolean => {
+const getStartOfDay = (): Date => {
   const now = new Date();
-  const last = new Date(lastDate);
-  return (
-    now.getDate() !== last.getDate() ||
-    now.getMonth() !== last.getMonth() ||
-    now.getFullYear() !== last.getFullYear()
-  );
+  now.setHours(0, 0, 0, 0);
+  return now;
+};
+
+const getEndOfDay = (): Date => {
+  const now = new Date();
+  now.setHours(23, 59, 59, 999);
+  return now;
 };
 
 const getRandomReward = (): number => {
@@ -28,33 +30,33 @@ export const claimAdReward = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Wallet address required' });
     }
 
-    let adReward = await AdReward.findOne({ walletAddress });
+    // Count today's claims for this wallet
+    const startOfDay = getStartOfDay();
+    const endOfDay = getEndOfDay();
 
-    if (!adReward) {
-      adReward = new AdReward({
-        walletAddress,
-        claimedCount: 0,
-        lastResetDate: new Date(),
-        lastClaimTime: new Date(),
-      });
-    }
+    const todayClaimsCount = await AdReward.countDocuments({
+      walletAddress,
+      createdAt: {
+        $gte: startOfDay,
+        $lte: endOfDay,
+      },
+    });
 
-    if (isNewDay(adReward.lastResetDate)) {
-      adReward.claimedCount = 0;
-      adReward.lastResetDate = new Date();
-    }
-
-    if (adReward.claimedCount >= MAX_DAILY_CLAIMS) {
+    // Check if user has reached daily limit
+    if (todayClaimsCount >= MAX_DAILY_CLAIMS) {
       return res.status(429).json({
         error: 'Daily limit reached',
-        message: 'You have reached the maximum 6 ad rewards for today. Come back tomorrow!',
-        claimedCount: adReward.claimedCount,
+        message:
+          'You have reached the maximum 6 ad rewards for today. Come back tomorrow!',
+        claimedCount: todayClaimsCount,
         maxClaims: MAX_DAILY_CLAIMS,
       });
     }
 
+    // Get random reward
     const reward = getRandomReward();
 
+    // Update user balance
     const user = await User.findOne({ walletAddress });
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
@@ -63,20 +65,26 @@ export const claimAdReward = async (req: Request, res: Response) => {
     user.totalBalance += reward;
     await user.save();
 
-    adReward.claimedCount += 1;
-    adReward.lastClaimTime = new Date();
-    await adReward.save();
+    // Create a new entry for this claim
+    const adRewardEntry = new AdReward({
+      walletAddress,
+      rewardAmount: reward,
+      createdAt: new Date(),
+    });
+    await adRewardEntry.save();
+
+    const newClaimsCount = todayClaimsCount + 1;
 
     console.log(
-      `💰 Ad reward claimed: ${walletAddress} earned ${reward} tokens (${adReward.claimedCount}/${MAX_DAILY_CLAIMS})`,
+      `💰 Ad reward claimed: ${walletAddress} earned ${reward} tokens (${newClaimsCount}/${MAX_DAILY_CLAIMS})`,
     );
 
     return res.json({
       success: true,
       reward,
       newBalance: user.totalBalance,
-      claimedCount: adReward.claimedCount,
-      remainingClaims: MAX_DAILY_CLAIMS - adReward.claimedCount,
+      claimedCount: newClaimsCount,
+      remainingClaims: MAX_DAILY_CLAIMS - newClaimsCount,
     });
   } catch (error) {
     console.error('Error claiming ad reward:', error);
@@ -92,31 +100,33 @@ export const getAdRewardStatus = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Wallet address required' });
     }
 
-    let adReward = await AdReward.findOne({ walletAddress });
+    // Count today's claims for this wallet
+    const startOfDay = getStartOfDay();
+    const endOfDay = getEndOfDay();
 
-    if (!adReward) {
-      return res.json({
-        claimedCount: 0,
-        remainingClaims: MAX_DAILY_CLAIMS,
-        maxClaims: MAX_DAILY_CLAIMS,
-        canClaim: true,
-      });
-    }
+    const todayClaimsCount = await AdReward.countDocuments({
+      walletAddress,
+      createdAt: {
+        $gte: startOfDay,
+        $lte: endOfDay,
+      },
+    });
 
-    if (isNewDay(adReward.lastResetDate)) {
-      adReward.claimedCount = 0;
-      adReward.lastResetDate = new Date();
-      await adReward.save();
-    }
+    const canClaim = todayClaimsCount < MAX_DAILY_CLAIMS;
 
-    const canClaim = adReward.claimedCount < MAX_DAILY_CLAIMS;
+    // Get the last claim time
+    const lastClaim = await AdReward.findOne({
+      walletAddress,
+    })
+      .sort({ createdAt: -1 })
+      .limit(1);
 
     return res.json({
-      claimedCount: adReward.claimedCount,
-      remainingClaims: MAX_DAILY_CLAIMS - adReward.claimedCount,
+      claimedCount: todayClaimsCount,
+      remainingClaims: MAX_DAILY_CLAIMS - todayClaimsCount,
       maxClaims: MAX_DAILY_CLAIMS,
       canClaim,
-      lastClaimTime: adReward.lastClaimTime,
+      lastClaimTime: lastClaim?.createdAt || null,
     });
   } catch (error) {
     console.error('Error getting ad reward status:', error);

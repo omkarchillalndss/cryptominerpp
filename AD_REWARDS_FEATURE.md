@@ -10,16 +10,17 @@ Users watch **real Google AdMob ads** to earn random token rewards (10-60 tokens
 
 1. **Model: `backend/models/AdReward.ts`**
 
-   - Tracks user's daily ad reward claims
-   - Fields: walletAddress, claimedCount, lastResetDate, lastClaimTime
-   - Automatically resets count at midnight
+   - **Each claim is stored as a separate entry**
+   - Fields: walletAddress, rewardAmount, createdAt
+   - Indexed for efficient queries by wallet and date
+   - No need for manual resets - queries filter by date
 
 2. **Controller: `backend/controllers/adRewards.ts`**
 
-   - `claimAdReward`: Awards random tokens (10, 20, 30, 40, 50, or 60)
-   - `getAdRewardStatus`: Returns current claim status
-   - Daily limit: 6 claims per day
-   - Auto-resets at midnight
+   - `claimAdReward`: Awards random tokens and creates new entry
+   - `getAdRewardStatus`: Counts today's claims from database
+   - Daily limit: 6 claims per day (counted from today's entries)
+   - Uses date range queries (start of day to end of day)
 
 3. **Routes: `backend/routes/adRewards.ts`**
 
@@ -53,7 +54,8 @@ Users watch **real Google AdMob ads** to earn random token rewards (10-60 tokens
    - Waits for user to complete watching ad
    - Claims reward from backend after ad completion
    - Shows success alert with reward amount
-   - Navigates back to HomeScreen
+   - **Automatically navigates back to HomeScreen** after ad closes (completed or dismissed)
+   - Uses AppState monitoring to detect when user closes ad
 
 ## How It Works
 
@@ -122,14 +124,23 @@ curl -X POST http://localhost:3000/api/ad-rewards/claim \
 
 ## Database Schema
 
+**Each claim is stored as a separate entry:**
+
 ```typescript
 AdReward {
-  walletAddress: string (unique, indexed)
-  claimedCount: number (default: 0)
-  lastResetDate: Date (default: now)
-  lastClaimTime: Date (default: now)
+  walletAddress: string (indexed)
+  rewardAmount: number (10, 20, 30, 40, 50, or 60)
+  createdAt: Date (default: now)
 }
 ```
+
+**Benefits of this approach:**
+
+- Complete history of all ad reward claims
+- Easy to query claims by date range
+- Can generate analytics and reports
+- No need to reset counters - just count today's claims
+- Audit trail for each reward
 
 ## UI/UX
 
