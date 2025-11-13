@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -11,6 +11,8 @@ import ClaimScreen from './src/screens/ClaimScreen';
 import AdScreen from './src/screens/AdScreen';
 import LeaderBoardScreen from './src/screens/LeaderBoardScreenWrapper';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { notificationService } from './src/services/notificationService';
+import notifee, { EventType } from '@notifee/react-native';
 
 const Stack = createStackNavigator();
 
@@ -18,6 +20,56 @@ function Root() {
   const { walletAddress, isLoading, miningStatus, hasUnclaimedRewards } =
     useMining();
   const [showInitialSplash, setShowInitialSplash] = useState(true);
+  const navigationRef = useRef<any>(null);
+
+  // Initialize notification service and handle background notifications
+  useEffect(() => {
+    // Wrap notification initialization in try/catch so missing native module
+    // doesn't crash the entire app during startup.
+    (async () => {
+      try {
+        await notificationService.initialize();
+        await notificationService.handleBackgroundNotification();
+
+        // Check if app was opened from a notification
+        try {
+          const initialNotification = await notifee.getInitialNotification();
+          if (initialNotification) {
+            console.log(
+              '📱 App opened from notification:',
+              initialNotification,
+            );
+            const screen = initialNotification.notification.data?.screen;
+            if (screen && navigationRef.current) {
+              // Delay navigation to ensure navigation is ready
+              setTimeout(() => {
+                navigationRef.current?.navigate(screen);
+              }, 1000);
+            }
+          }
+        } catch (err) {
+          console.warn('Notifee getInitialNotification failed:', err);
+        }
+      } catch (err) {
+        console.warn(
+          'NotificationService init failed (notifee may be missing):',
+          err,
+        );
+      }
+    })();
+
+    // Handle foreground notification press
+    const unsubscribe =
+      notificationService.setupNotificationHandler(navigationRef);
+
+    return () => {
+      try {
+        if (typeof unsubscribe === 'function') unsubscribe();
+      } catch (err) {
+        // ignore
+      }
+    };
+  }, []);
 
   // Show splash screen on first load
   if (showInitialSplash) {
@@ -38,7 +90,7 @@ function Root() {
   };
 
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <Stack.Navigator
         screenOptions={{ headerShown: false }}
         initialRouteName={getInitialRoute()}

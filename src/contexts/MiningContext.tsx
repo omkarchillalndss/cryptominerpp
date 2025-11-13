@@ -9,6 +9,7 @@ import React, {
 import { AppState, AppStateStatus } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api } from '../services/api';
+import { notificationService } from '../services/notificationService';
 
 type MiningStatus = 'active' | 'inactive';
 
@@ -434,6 +435,12 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
         setMiningStatus('inactive');
         setHasUnclaimedRewards(true);
         console.log('⏰ Mining completed! Rewards ready to claim.');
+
+        // Show notification when mining completes
+        notificationService.displayImmediateNotification(
+          '⛏️ Mining Complete!',
+          'Your mining session has finished. Tap to claim your rewards!',
+        );
       }
     }, 1000);
   };
@@ -500,6 +507,12 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
     setMiningStatus('active');
     setHasUnclaimedRewards(false);
     tickStart(clientStartTs, durationSeconds, currentMultiplier, 0);
+
+    // Schedule notification for when mining completes
+    await notificationService.scheduleMiningCompleteNotification(
+      durationSeconds,
+    );
+
     await persist({
       startTimestamp: clientStartTs,
       selectedDuration: durationSeconds,
@@ -513,6 +526,10 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
     if (intervalRef.current) clearInterval(intervalRef.current);
     setMiningStatus('inactive');
     setCurrentMultiplier(1); // Reset multiplier to 1
+
+    // Cancel scheduled notification
+    await notificationService.cancelMiningNotification();
+
     await api.post('/api/mining/stop', { walletAddress });
     await persist({ miningStatus: 'inactive', multiplier: 1 });
   };
@@ -544,6 +561,10 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
     setMiningStatus('inactive');
     setCurrentMultiplier(1); // Reset multiplier to 1 after claiming
     setHasUnclaimedRewards(false); // Clear unclaimed rewards flag
+
+    // Cancel any pending notifications
+    await notificationService.cancelMiningNotification();
+
     await refreshBalance();
     await persist({ miningStatus: 'inactive', liveTokens: 0, multiplier: 1 });
     return awarded as number;
