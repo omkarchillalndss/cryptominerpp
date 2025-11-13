@@ -392,9 +392,6 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
             // If backend data changed significantly (more than 5 seconds or duration changed)
             // restart the ticker with new backend data
             if (timeDiff > 5000 || durationChanged) {
-              console.log(
-                '🔄 Backend mining data changed, restarting ticker...',
-              );
               setSelectedDuration(duration);
               setCurrentMultiplier(multiplier);
 

@@ -41,7 +41,7 @@ function Root() {
               initialNotification,
             );
             const screen = initialNotification.notification.data?.screen;
-            console.log('Initial notification screen:', screen);
+
             if (screen) {
               // Delay navigation to ensure navigation is ready
               setTimeout(() => {
@@ -75,9 +75,6 @@ function Root() {
       }
     };
   }, []);
-
-  // Debug logging
-  console.log('🎬 App State:', { showInitialSplash, isLoading, walletAddress });
 
   // Show splash screen while loading (combines initial splash + hydration)
   if (showInitialSplash || isLoading) {
