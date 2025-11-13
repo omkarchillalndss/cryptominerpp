@@ -48,8 +48,16 @@ export default function HomeScreen({ navigation }: any) {
         >
           {/* Header */}
           <View style={styles.header}>
-            {/* Logout Button - Top Right */}
-            <View style={styles.logoutContainer}>
+            {/* Top Buttons Row - Leaderboard and Logout */}
+            <View style={styles.topButtonsRow}>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('LeaderBoard')}
+                activeOpacity={0.8}
+                style={styles.leaderboardButton}
+              >
+                <Text style={styles.leaderboardButtonText}>🏆 Leaderboard</Text>
+              </TouchableOpacity>
+
               <TouchableOpacity
                 onPress={async () => {
                   if (isMining) {
@@ -210,23 +218,6 @@ export default function HomeScreen({ navigation }: any) {
             </View>
           </View>
 
-          {/* Leaderboard Button */}
-          <TouchableOpacity
-            onPress={() => navigation.navigate('LeaderBoard')}
-            activeOpacity={0.8}
-            style={{ marginTop: 24, alignSelf: 'center' }}
-          >
-            <LinearGradient
-              colors={['#f59e0b', '#d97706']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.actionButton}
-            >
-              <Text>🏆</Text>
-              <Text>View Leaderboard</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-
           {/* Test Notification Button - Debug Only */}
           <TouchableOpacity
             onPress={async () => {
@@ -351,9 +342,25 @@ const styles = StyleSheet.create({
   header: {
     marginBottom: 32,
   },
-  logoutContainer: {
-    alignItems: 'flex-end',
+  topButtonsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 16,
+    gap: 12,
+  },
+  leaderboardButton: {
+    backgroundColor: 'rgba(245, 158, 11, 0.2)',
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.4)',
+    borderRadius: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  leaderboardButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
   logoutButton: {
     backgroundColor: 'rgba(239, 68, 68, 0.2)',
