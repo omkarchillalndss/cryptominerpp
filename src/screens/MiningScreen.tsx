@@ -144,18 +144,24 @@ export default function MiningScreen({ navigation }: any) {
             <TouchableOpacity
               onPress={() => navigation.navigate('Ad')}
               activeOpacity={0.8}
-              disabled={finished}
+              disabled={finished || currentMultiplier >= 6}
               style={styles.buttonHalf}
             >
               <LinearGradient
                 colors={
-                  finished ? ['#6b7280', '#4b5563'] : ['#ca8a04', '#ea580c']
+                  finished || currentMultiplier >= 6
+                    ? ['#6b7280', '#4b5563']
+                    : ['#ca8a04', '#ea580c']
                 }
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.button}
               >
-                <Text style={styles.buttonText}>⚡ Upgrade Multiplier</Text>
+                <Text style={styles.buttonText}>
+                  {currentMultiplier >= 6
+                    ? '✅ Max Multiplier'
+                    : '⚡ Upgrade Multiplier'}
+                </Text>
               </LinearGradient>
             </TouchableOpacity>
 

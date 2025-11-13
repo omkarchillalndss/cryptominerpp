@@ -335,13 +335,13 @@ export default function HomeScreen({ navigation }: any) {
               // Test scheduled notification (10 seconds)
               const notifId =
                 await notificationService.scheduleMiningCompleteNotification(
-                  10,
+                  30,
                 );
 
               if (notifId) {
                 Alert.alert(
                   'Notification Test',
-                  'Immediate notification sent! A scheduled notification will appear in 10 seconds.',
+                  'Immediate notification sent! A scheduled notification will appear in 30 seconds.',
                   [{ text: 'OK' }],
                 );
               } else {

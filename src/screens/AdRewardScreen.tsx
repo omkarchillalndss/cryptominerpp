@@ -114,6 +114,15 @@ export default function AdRewardScreen({ navigation }: any) {
         .then(() => {
           console.log('📺 Ad shown successfully');
           adShownTime.current = Date.now();
+
+          // Set a timeout to navigate back if reward not claimed
+          // This handles cases where ad is dismissed quickly
+          setTimeout(() => {
+            if (!rewardClaimed) {
+              console.log('⚠️ Ad dismissed, navigating back to Home');
+              navigation.navigate('Home');
+            }
+          }, 5000); // Wait 5 seconds after ad is shown
         })
         .catch(error => {
           console.error('❌ Failed to show ad:', error);
@@ -131,7 +140,7 @@ export default function AdRewardScreen({ navigation }: any) {
           );
         });
     }
-  }, [adLoaded, adShown]);
+  }, [adLoaded, adShown, rewardClaimed, navigation]);
 
   // Monitor app state to detect when user closes the ad
   useEffect(() => {
