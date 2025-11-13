@@ -226,6 +226,52 @@ export default function HomeScreen({ navigation }: any) {
               <Text>View Leaderboard</Text>
             </LinearGradient>
           </TouchableOpacity>
+
+          {/* Test Notification Button - Debug Only */}
+          <TouchableOpacity
+            onPress={async () => {
+              const { notificationService } = await import(
+                '../services/notificationService'
+              );
+
+              // Test immediate notification
+              await notificationService.displayImmediateNotification(
+                '🧪 Test Notification',
+                'If you see this, notifications are working!',
+              );
+
+              // Test scheduled notification (10 seconds)
+              const notifId =
+                await notificationService.scheduleMiningCompleteNotification(
+                  10,
+                );
+
+              if (notifId) {
+                Alert.alert(
+                  'Notification Test',
+                  'Immediate notification sent! A scheduled notification will appear in 10 seconds.',
+                  [{ text: 'OK' }],
+                );
+              } else {
+                Alert.alert(
+                  'Notification Permission Required',
+                  'Please enable notifications in your device settings for this app.',
+                  [{ text: 'OK' }],
+                );
+              }
+            }}
+            activeOpacity={0.8}
+            style={{ marginTop: 16, alignSelf: 'center' }}
+          >
+            <LinearGradient
+              colors={['#6366f1', '#4f46e5']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.actionButton}
+            >
+              <Text style={styles.actionButtonText}>🧪 Test Notifications</Text>
+            </LinearGradient>
+          </TouchableOpacity>
         </ScrollView>
 
         <DurationPopup

@@ -196,7 +196,7 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
         (async () => {
           try {
             const timeoutPromise = new Promise((_, reject) =>
-              setTimeout(() => reject(new Error('Backend timeout')), 3000),
+              setTimeout(() => reject(new Error('Backend timeout')), 1000),
             );
 
             const res = (await Promise.race([
@@ -267,7 +267,6 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     } catch (error) {
       console.error('❌ Error during hydration:', error);
-    } finally {
       setIsLoading(false);
     }
   };
@@ -316,17 +315,19 @@ export const MiningProvider: React.FC<{ children: React.ReactNode }> = ({
 
     // Set a maximum timeout for hydration to prevent infinite splash screen
     const maxLoadTimeout = setTimeout(() => {
-      console.warn('⚠️ Hydration timeout (2s) - forcing app to load');
+      console.warn('⚠️ Hydration timeout (500ms) - forcing app to load');
       setIsLoading(false);
-    }, 2000); // Max 2 seconds for hydration
+    }, 500); // Reduced to 500ms for faster loading
 
     // Start hydration
     hydrate()
       .then(() => {
         console.log('✅ Hydration completed successfully');
+        setIsLoading(false); // Explicitly set loading to false on success
       })
       .catch(err => {
         console.error('❌ Hydration error:', err);
+        setIsLoading(false); // Ensure loading stops on error
       })
       .finally(() => {
         console.log('🏁 Hydration finally block - clearing timeout');

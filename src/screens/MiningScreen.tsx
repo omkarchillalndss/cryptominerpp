@@ -349,7 +349,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   progressText: {
-    color: '#838282ff',
+    color: '#371e1eff',
     fontSize: 15,
     fontWeight: '700',
   },
