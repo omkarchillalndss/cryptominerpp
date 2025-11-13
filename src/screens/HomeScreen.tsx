@@ -28,9 +28,70 @@ export default function HomeScreen({ navigation }: any) {
     configLoading,
   } = useMining();
   const [popup, setPopup] = useState(false);
+  const [adRewardStatus, setAdRewardStatus] = useState({
+    claimedCount: 0,
+    remainingClaims: 6,
+    canClaim: true,
+  });
 
   const isMining = miningStatus === 'active';
   const canClaim = hasUnclaimedRewards;
+
+  // Fetch ad reward status on mount and when wallet changes
+  React.useEffect(() => {
+    if (walletAddress) {
+      fetchAdRewardStatus();
+    }
+  }, [walletAddress]);
+
+  const fetchAdRewardStatus = async () => {
+    try {
+      const { adRewardService } = await import('../services/adRewardService');
+      const status = await adRewardService.getStatus(walletAddress);
+      setAdRewardStatus(status);
+    } catch (error: any) {
+      console.error('Failed to fetch ad reward status:', error);
+      // If backend is not available, use default values
+      if (
+        error.message?.includes('404') ||
+        error.message?.includes('Network')
+      ) {
+        console.warn(
+          '⚠️ Backend not available - using default ad reward status',
+        );
+        setAdRewardStatus({
+          claimedCount: 0,
+          remainingClaims: 6,
+          canClaim: true,
+        });
+      }
+    }
+  };
+
+  const handleWatchAd = () => {
+    if (!adRewardStatus.canClaim) {
+      Alert.alert(
+        'Daily Limit Reached',
+        'You have claimed all 6 ad rewards for today. Come back tomorrow!',
+        [{ text: 'OK' }],
+      );
+      return;
+    }
+
+    // Navigate to AdRewardScreen to show the ad
+    navigation.navigate('AdReward');
+  };
+
+  // Refresh ad status when returning to this screen
+  React.useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      if (walletAddress) {
+        fetchAdRewardStatus();
+      }
+    });
+
+    return unsubscribe;
+  }, [navigation, walletAddress]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -202,6 +263,46 @@ export default function HomeScreen({ navigation }: any) {
                 </TouchableOpacity>
               )}
             </View>
+          </View>
+
+          {/* Watch Ads to Earn Card */}
+          <View style={styles.adRewardCard}>
+            <View style={styles.adRewardHeader}>
+              <Text style={styles.adRewardTitle}>📺 Watch Ads to Earn</Text>
+              <View style={styles.adRewardBadge}>
+                <Text style={styles.adRewardBadgeText}>
+                  {adRewardStatus.claimedCount}/6 Today
+                </Text>
+              </View>
+            </View>
+
+            <Text style={styles.adRewardDescription}>
+              Watch ads and earn 10-60 tokens instantly!
+            </Text>
+
+            <TouchableOpacity
+              onPress={handleWatchAd}
+              activeOpacity={0.8}
+              disabled={!adRewardStatus.canClaim}
+              style={{ marginTop: 12 }}
+            >
+              <LinearGradient
+                colors={
+                  adRewardStatus.canClaim
+                    ? ['#10b981', '#059669']
+                    : ['#6b7280', '#4b5563']
+                }
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.adRewardButton}
+              >
+                <Text style={styles.adRewardButtonText}>
+                  {adRewardStatus.canClaim
+                    ? `🎁 Watch Ad (${adRewardStatus.remainingClaims} left)`
+                    : '✅ All Claimed Today'}
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
           </View>
 
           {/* Info Card */}
@@ -549,6 +650,63 @@ const styles = StyleSheet.create({
   infoValue: {
     color: '#fff',
     fontSize: 18,
+    fontWeight: '600',
+  },
+  adRewardCard: {
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.3)',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  adRewardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  adRewardTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  adRewardBadge: {
+    backgroundColor: 'rgba(16, 185, 129, 0.3)',
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.5)',
+    borderRadius: 12,
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+  },
+  adRewardBadgeText: {
+    color: '#86efac',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  adRewardDescription: {
+    color: '#d1fae5',
+    fontSize: 14,
+    marginBottom: 4,
+  },
+  adRewardButton: {
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  adRewardButtonText: {
+    color: '#fff',
+    fontSize: 16,
     fontWeight: '600',
   },
 });

@@ -6,6 +6,7 @@ import users from './routes/users';
 import mining from './routes/mining';
 import config from './routes/config';
 import leaderboard from './routes/leaderboard';
+import adRewards from './routes/adRewards';
 
 dotenv.config();
 
@@ -18,6 +19,7 @@ async function main() {
   app.use('/api/mining', mining);
   app.use('/api/config', config);
   app.use('/api/leaderboard', leaderboard);
+  app.use('/api/ad-rewards', adRewards);
   app.get('/health', (_, res) => res.json({ ok: true }));
   const port = Number(process.env.PORT || 3000);
   app.listen(port, () => console.log(`Server listening on :${port} ✅`));
