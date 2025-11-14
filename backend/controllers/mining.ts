@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { MiningSession } from '../models/MiningSession';
 import { User } from '../models/User';
 import { Referral } from '../models/Referral';
+import { ReferralBonus } from '../models/ReferralBonus';
 import { computeReward, clampMultiplier } from '../utils/calc';
 
 const MAX_MULTIPLIER = Number(process.env.MAX_MULTIPLIER ?? '6');
@@ -95,6 +96,38 @@ export const claim = async (req: Request, res: Response) => {
     { $inc: { totalBalance: awarded } },
     { new: true, upsert: false },
   );
+
+  // Check if this user was referred by someone
+  if (referral?.hasUsedReferralCode && referral.usedReferralCode) {
+    // Find the referrer
+    const referrer = await Referral.findOne({
+      referralCode: referral.usedReferralCode,
+    });
+
+    if (referrer) {
+      // Calculate 10% bonus
+      const bonusAmount = Math.floor(awarded * 0.1);
+
+      // Award bonus to referrer
+      await Referral.findOneAndUpdate(
+        { walletAddress: referrer.walletAddress },
+        { $inc: { totalBalance: bonusAmount } },
+      );
+
+      // Record the bonus
+      await ReferralBonus.create({
+        walletAddress: referrer.walletAddress,
+        referredWallet: walletAddress,
+        bonusAmount,
+        miningReward: awarded,
+        createdAt: new Date(),
+      });
+
+      console.log(
+        `🎁 Referral bonus: ${referrer.walletAddress} earned ${bonusAmount} tokens (10% of ${walletAddress}'s ${awarded} tokens)`,
+      );
+    }
+  }
 
   // Update session: when status becomes 'claimed', totalCoins = totalCoins + currentMiningPoints
   session.currentMiningPoints = awarded; // Tokens earned in this session

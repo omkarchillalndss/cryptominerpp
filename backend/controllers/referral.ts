@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { User } from '../models/User';
 import { Referral } from '../models/Referral';
+import { ReferralBonus } from '../models/ReferralBonus';
 
 // Apply referral code
 export const applyReferralCode = async (req: Request, res: Response) => {
@@ -107,16 +108,58 @@ export const getReferralStats = async (req: Request, res: Response) => {
       usedReferralCode: referral.referralCode,
     });
 
+    // Calculate total bonus earned from referrals' mining
+    const totalBonusEarned = await ReferralBonus.aggregate([
+      { $match: { walletAddress } },
+      { $group: { _id: null, total: { $sum: '$bonusAmount' } } },
+    ]);
+
+    const bonusEarned = totalBonusEarned[0]?.total || 0;
+
     return res.json({
       referralCode: referral.referralCode,
       hasUsedReferralCode: referral.hasUsedReferralCode,
       usedReferralCode: referral.usedReferralCode,
       referralPoints: referral.totalReferralPoints,
       referralCount: referral.totalReferrals,
+      bonusEarned,
       canUseReferral: !referral.hasUsedReferralCode,
     });
   } catch (error) {
     console.error('Error getting referral stats:', error);
     return res.status(500).json({ error: 'Failed to get referral stats' });
+  }
+};
+
+// Get referral bonus history
+export const getReferralBonusHistory = async (
+  req: Request,
+  res: Response,
+) => {
+  try {
+    const { walletAddress } = req.params;
+
+    if (!walletAddress) {
+      return res.status(400).json({ error: 'Wallet address required' });
+    }
+
+    // Get bonus history
+    const bonuses = await ReferralBonus.find({ walletAddress })
+      .sort({ createdAt: -1 })
+      .limit(50);
+
+    // Calculate total
+    const total = bonuses.reduce((sum, b) => sum + b.bonusAmount, 0);
+
+    return res.json({
+      bonuses,
+      total,
+      count: bonuses.length,
+    });
+  } catch (error) {
+    console.error('Error getting referral bonus history:', error);
+    return res
+      .status(500)
+      .json({ error: 'Failed to get referral bonus history' });
   }
 };

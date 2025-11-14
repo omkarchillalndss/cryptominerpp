@@ -22,6 +22,7 @@ export default function ReferralScreen({ navigation }: any) {
   const [stats, setStats] = useState({
     referralPoints: 0,
     referralCount: 0,
+    bonusEarned: 0,
     canUseReferral: true,
     hasUsedReferralCode: false,
     usedReferralCode: '',
@@ -39,6 +40,7 @@ export default function ReferralScreen({ navigation }: any) {
       setStats({
         referralPoints: data.referralPoints,
         referralCount: data.referralCount,
+        bonusEarned: data.bonusEarned || 0,
         canUseReferral: data.canUseReferral,
         hasUsedReferralCode: data.hasUsedReferralCode,
         usedReferralCode: data.usedReferralCode || '',
@@ -165,7 +167,12 @@ export default function ReferralScreen({ navigation }: any) {
 
               <View style={styles.statItem}>
                 <Text style={styles.statValue}>{stats.referralPoints}</Text>
-                <Text style={styles.statLabel}>Points Earned</Text>
+                <Text style={styles.statLabel}>Direct Rewards</Text>
+              </View>
+
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{stats.bonusEarned}</Text>
+                <Text style={styles.statLabel}>Mining Bonus</Text>
               </View>
             </View>
           </View>
@@ -192,6 +199,13 @@ export default function ReferralScreen({ navigation }: any) {
               <Text style={styles.infoIcon}>3️⃣</Text>
               <Text style={styles.infoText}>
                 You get 200 tokens for each referral!
+              </Text>
+            </View>
+
+            <View style={styles.infoItem}>
+              <Text style={styles.infoIcon}>4️⃣</Text>
+              <Text style={styles.infoText}>
+                Earn 10% bonus from their mining rewards forever!
               </Text>
             </View>
           </View>

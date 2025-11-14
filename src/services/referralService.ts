@@ -6,6 +6,7 @@ export interface ReferralStats {
   usedReferralCode?: string;
   referralPoints: number;
   referralCount: number;
+  bonusEarned: number;
   canUseReferral: boolean;
 }
 
