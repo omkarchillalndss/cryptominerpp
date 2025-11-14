@@ -1,11 +1,40 @@
 import { Request, Response } from 'express';
 import { User } from '../models/User';
 
+// Generate unique referral code
+const generateReferralCode = (): string => {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code = '';
+  for (let i = 0; i < 8; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+};
+
 export const signup = async (req: Request, res: Response) => {
   const { walletAddress } = req.body;
   const existing = await User.findOne({ walletAddress });
   if (existing) return res.json(existing);
-  const user = await User.create({ walletAddress, totalBalance: 0 });
+  
+  // Generate unique referral code
+  let referralCode = generateReferralCode();
+  let codeExists = await User.findOne({ referralCode });
+  
+  // Ensure code is unique
+  while (codeExists) {
+    referralCode = generateReferralCode();
+    codeExists = await User.findOne({ referralCode });
+  }
+  
+  const user = await User.create({
+    walletAddress,
+    totalBalance: 0,
+    referralCode,
+    hasUsedReferralCode: false,
+    referralPoints: 0,
+  });
+  
+  console.log(`✅ New user created: ${walletAddress} | Referral code: ${referralCode}`);
   res.status(201).json(user);
 };
 

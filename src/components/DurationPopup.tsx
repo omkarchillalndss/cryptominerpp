@@ -101,11 +101,14 @@ export const DurationPopup: React.FC<{
                           >
                             {active ? (
                               <LinearGradient
-                                colors={['#3b82f6', '#9333ea']}
-                                start={{ x: 0, y: 0 }}
-                                end={{ x: 1, y: 1 }}
-                                style={styles.optionButton}
+                                colors={['#3b82f6', '#5b21b6', '#9333ea']} // upgraded 3-color gradient like balanceCard
+                                style={[
+                                  styles.balanceCardButton,
+                                  styles.optionButtonCard,
+                                ]}
                               >
+                                <View style={styles.cardDecorationSmall} />
+
                                 <Text style={styles.optionTextActive}>
                                   {d.label}
                                 </Text>
@@ -139,14 +142,18 @@ export const DurationPopup: React.FC<{
                           >
                             {active ? (
                               <LinearGradient
-                                colors={['#fbbf24', '#f97316']}
-                                start={{ x: 0, y: 0 }}
-                                end={{ x: 1, y: 1 }}
-                                style={styles.optionButton}
+                                colors={['#fbbf24', '#f97316', '#f43f5e']} // three-tone like the balance card
+                                style={[
+                                  styles.balanceCardButton,
+                                  styles.optionButtonCard,
+                                ]}
                               >
+                                <View style={styles.cardDecorationSmall} />
+
                                 <Text style={styles.optionTextActive}>
                                   {m.label}
                                 </Text>
+
                                 {m.requiresAd && (
                                   <Text style={styles.adBadge}>📺 Ad</Text>
                                 )}
@@ -213,11 +220,11 @@ export const DurationPopup: React.FC<{
 
               <TouchableOpacity onPress={handleStart} activeOpacity={0.8}>
                 <LinearGradient
-                  colors={['#16a34a', '#059669']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.startButton}
+                  colors={['#5bde8b', '#00a542', '#004e3a']}
+                  style={[styles.balanceCardButton, styles.startButtonCard]}
                 >
+                  <View style={styles.cardDecorationSmall} />
+
                   <Text style={styles.startButtonText}>🚀 Start Mining</Text>
                 </LinearGradient>
               </TouchableOpacity>
@@ -409,5 +416,36 @@ const styles = StyleSheet.create({
     color: '#e9d5ff',
     fontSize: 14,
     marginTop: 16,
+  },
+  balanceCardButton: {
+    borderRadius: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    position: 'relative',
+    overflow: 'hidden',
+
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  optionButtonCard: {
+    minWidth: 80,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cardDecorationSmall: {
+    position: 'absolute',
+    top: -89,
+    right: -81,
+    width: 128,
+    height: 128,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 64,
+  },
+  startButtonCard: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

@@ -10,6 +10,7 @@ import MiningScreen from './src/screens/MiningScreen';
 import ClaimScreen from './src/screens/ClaimScreen';
 import AdScreen from './src/screens/AdScreen';
 import AdRewardScreen from './src/screens/AdRewardScreen';
+import ReferralScreen from './src/screens/ReferralScreen';
 import LeaderBoardScreen from './src/screens/LeaderBoardScreenWrapper';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { notificationService } from './src/services/notificationService';
@@ -102,6 +103,7 @@ function Root() {
         <Stack.Screen name="Claim" component={ClaimScreen} />
         <Stack.Screen name="Ad" component={AdScreen} />
         <Stack.Screen name="AdReward" component={AdRewardScreen} />
+        <Stack.Screen name="Referral" component={ReferralScreen} />
         <Stack.Screen name="LeaderBoard" component={LeaderBoardScreen} />
       </Stack.Navigator>
     </NavigationContainer>

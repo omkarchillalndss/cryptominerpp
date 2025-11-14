@@ -183,15 +183,15 @@ export default function HomeScreen({ navigation }: any) {
             </LinearGradient>
 
             {/* <LinearGradient
-            colors={['#4ade80', '#10b981', '#14b8a6']}
-            style={styles.balanceCard}
-          >
-            <View style={styles.cardDecoration} />
-            <Text style={styles.balanceLabel}>Wallet Balance</Text>
-            <Text style={styles.balanceValue}>
-              {(walletBalance || 0).toFixed(4)}
-            </Text>
-          </LinearGradient> */}
+              colors={['#4ade80', '#10b981', '#14b8a6']}
+              style={styles.balanceCard}
+            >
+              <View style={styles.cardDecoration} />
+              <Text style={styles.balanceLabel}>Wallet Balance</Text>
+              <Text style={styles.balanceValue}>
+                {(walletBalance || 0).toFixed(4)}
+              </Text>
+            </LinearGradient> */}
           </View>
 
           {/* Mining Status Card */}
@@ -213,15 +213,16 @@ export default function HomeScreen({ navigation }: any) {
                   </Text>
                   <TouchableOpacity
                     onPress={() => setPopup(true)}
-                    activeOpacity={0.8}
+                    activeOpacity={0.85}
+                    style={{ width: '100%' }}
                   >
                     <LinearGradient
-                      colors={['#9333ea', '#2563eb']}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
-                      style={styles.actionButton}
+                      colors={['#9333ea', '#6d28d9', '#2563eb']} // upgraded 3-tone gradient like your balance card
+                      style={[styles.balanceCard, styles.startMiningButton]}
                     >
-                      <Text style={styles.actionButtonText}>Start Mining</Text>
+                      <View style={styles.cardDecoration} />
+
+                      <Text style={styles.startMiningText}>Start Mining</Text>
                     </LinearGradient>
                   </TouchableOpacity>
                 </View>
@@ -293,14 +294,14 @@ export default function HomeScreen({ navigation }: any) {
               <LinearGradient
                 colors={
                   adRewardStatus.canClaim
-                    ? ['#10b981', '#059669']
+                    ? ['#5bde8bff', '#00a542', '#004e3a']
                     : ['#6b7280', '#4b5563']
                 }
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.adRewardButton}
+                style={[styles.balanceCard, styles.adRewardButtonGradient]}
               >
-                <Text style={styles.adRewardButtonText}>
+                {/* <View style={styles.cardDecoration} /> */}
+                <View style={styles.cardDecoration} />
+                <Text style={styles.balanceLabel}>
                   {adRewardStatus.canClaim
                     ? `🎁 Watch Ad (${adRewardStatus.remainingClaims} left)`
                     : '✅ All Claimed Today'}
@@ -309,22 +310,29 @@ export default function HomeScreen({ navigation }: any) {
             </TouchableOpacity>
           </View>
 
-          {/* Info Card */}
-          <View style={styles.infoCard}>
-            <View style={styles.infoGrid}>
-              <View style={styles.infoItem}>
-                <Text style={styles.infoLabel}>Base Rate</Text>
-                <Text style={styles.infoValue}>0.01 tokens/sec</Text>
+          {/* Referral Card */}
+          <TouchableOpacity
+            onPress={() => navigation.navigate('Referral')}
+            activeOpacity={0.85}
+          >
+            <LinearGradient
+              colors={['#9333ea', '#6d28d9', '#2563eb']} // upgraded gradient
+              style={[styles.balanceCard, styles.referralButtonGradient]}
+            >
+              <View style={styles.cardDecoration} />
+              <Text style={styles.referralIcon}>🎁</Text>
+              <View style={styles.referralContent}>
+                <Text style={styles.referralTitle}>Referral Program</Text>
+                <Text style={styles.referralText}>
+                  Click here to add referral code
+                </Text>
               </View>
-              <View style={styles.infoItem}>
-                <Text style={styles.infoLabel}>Multiplier</Text>
-                <Text style={styles.infoValue}>1X - 6X</Text>
-              </View>
-            </View>
-          </View>
+              <Text style={styles.referralArrow}>→</Text>
+            </LinearGradient>
+          </TouchableOpacity>
 
           {/* Test Notification Button - Debug Only */}
-          <TouchableOpacity
+          {/* <TouchableOpacity
             onPress={async () => {
               const { notificationService } = await import(
                 '../services/notificationService'
@@ -367,7 +375,7 @@ export default function HomeScreen({ navigation }: any) {
             >
               <Text style={styles.actionButtonText}>🧪 Test Notifications</Text>
             </LinearGradient>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </ScrollView>
 
         <DurationPopup
@@ -445,13 +453,13 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   header: {
-    marginBottom: 32,
+    marginBottom: 11,
   },
   topButtonsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 11,
     gap: 12,
   },
   leaderboardButton: {
@@ -485,7 +493,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#fff',
     textAlign: 'center',
-    marginBottom: 12,
+    marginBottom: 11,
   },
   addressContainer: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
@@ -503,7 +511,7 @@ const styles = StyleSheet.create({
   balancesContainer: {
     flexDirection: 'row',
     gap: 16,
-    marginBottom: 24,
+    marginBottom: 20,
   },
   balanceCard: {
     flex: 1,
@@ -528,7 +536,7 @@ const styles = StyleSheet.create({
   },
   balanceLabel: {
     color: 'rgba(255, 255, 255, 0.9)',
-    fontSize: 12,
+    fontSize: 18,
     marginBottom: 4,
   },
   balanceValue: {
@@ -542,12 +550,11 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 16,
     padding: 16,
-    marginBottom: 24,
+    marginBottom: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.3,
     shadowRadius: 20,
-    // elevation: 10,
   },
   statusHeader: {
     flexDirection: 'row',
@@ -657,17 +664,16 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   adRewardCard: {
-    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.3)',
+    borderColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 16,
     padding: 16,
-    marginBottom: 24,
+    marginBottom: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.3,
     shadowRadius: 20,
-    // elevation: 10,
   },
   adRewardHeader: {
     flexDirection: 'row',
@@ -712,5 +718,75 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  referralCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  referralIcon: {
+    fontSize: 40,
+    marginRight: 16,
+  },
+  referralContent: {
+    flex: 1,
+  },
+  referralTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  referralText: {
+    color: '#e9d5ff',
+    fontSize: 14,
+  },
+  referralArrow: {
+    color: '#fff',
+    fontSize: 24,
+    fontWeight: '700',
+  },
+  adRewardButtonGradient: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 220,
+  },
+  referralButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+    minHeight: 72,
+    overflow: 'hidden',
+  },
+  cardDecorationSmall: {
+    position: 'absolute',
+    top: -89,
+    right: -71,
+    width: 128,
+    height: 128,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 64,
+  },
+  startMiningButton: {
+    paddingVertical: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  startMiningText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '700',
+    textAlign: 'center',
   },
 });

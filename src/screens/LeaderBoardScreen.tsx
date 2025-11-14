@@ -149,6 +149,10 @@ const LeaderboardScreen: React.FC<Props> = ({
     <View style={styles.screen}>
       {/* Header */}
       <View style={styles.header}>
+        {/* 3D Trophy Animation */}
+        <View style={styles.trophyContainer}>
+          <Text style={styles.trophyEmoji}>🏆</Text>
+        </View>
         <Text style={styles.headerTitle}>Leaderboard</Text>
         <View style={styles.segment}>
           <TouchableOpacity style={[styles.segmentBtn, styles.segmentActive]}>
@@ -268,11 +272,20 @@ const styles = StyleSheet.create({
     paddingTop: Platform.select({ ios: 54, android: 24, default: 24 }),
     paddingHorizontal: 20,
   },
+  trophyContainer: {
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  trophyEmoji: {
+    fontSize: 64,
+    textAlign: 'center',
+  },
   headerTitle: {
     fontSize: 22,
     fontWeight: '800',
     color: '#fff',
     marginBottom: 12,
+    textAlign: 'center',
   },
   segment: {
     backgroundColor: '#3B2FA0',
