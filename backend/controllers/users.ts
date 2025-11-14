@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { User } from '../models/User';
+import { Referral } from '../models/Referral';
 
 // Generate unique referral code
 const generateReferralCode = (): string => {
@@ -15,26 +16,35 @@ export const signup = async (req: Request, res: Response) => {
   const { walletAddress } = req.body;
   const existing = await User.findOne({ walletAddress });
   if (existing) return res.json(existing);
-  
+
+  // Create user
+  const user = await User.create({
+    walletAddress,
+  });
+
   // Generate unique referral code
   let referralCode = generateReferralCode();
-  let codeExists = await User.findOne({ referralCode });
-  
+  let codeExists = await Referral.findOne({ referralCode });
+
   // Ensure code is unique
   while (codeExists) {
     referralCode = generateReferralCode();
-    codeExists = await User.findOne({ referralCode });
+    codeExists = await Referral.findOne({ referralCode });
   }
-  
-  const user = await User.create({
+
+  // Create referral record
+  await Referral.create({
     walletAddress,
-    totalBalance: 0,
     referralCode,
+    totalBalance: 0,
+    totalReferrals: 0,
     hasUsedReferralCode: false,
-    referralPoints: 0,
+    totalReferralPoints: 0,
   });
-  
-  console.log(`✅ New user created: ${walletAddress} | Referral code: ${referralCode}`);
+
+  console.log(
+    `✅ New user created: ${walletAddress} | Referral code: ${referralCode}`,
+  );
   res.status(201).json(user);
 };
 
@@ -42,19 +52,24 @@ export const getUser = async (req: Request, res: Response) => {
   const { walletAddress } = req.params;
   const user = await User.findOne({ walletAddress });
   if (!user) return res.status(404).json({ message: 'User not found' });
-  
+
+  // Get referral data for balance
+  const referral = await Referral.findOne({ walletAddress });
+
   // Check if user has an active mining session
   const { MiningSession } = await import('../models/MiningSession');
   const activeSession = await MiningSession.findOne({
     walletAddress,
     status: 'mining',
   }).sort({ miningStartTime: -1 });
-  
+
   // Get totalCoins from the most recent MiningSession (source of truth for display)
-  const latestSession = await MiningSession.findOne({ walletAddress })
-    .sort({ createdAt: -1 });
-  
-  const totalBalance = latestSession?.totalCoins ?? (user as any).totalBalance ?? 0;
+  const latestSession = await MiningSession.findOne({ walletAddress }).sort({
+    createdAt: -1,
+  });
+
+  const totalBalance =
+    latestSession?.totalCoins ?? referral?.totalBalance ?? 0;
   
   const response: any = {
     ...user.toObject(),

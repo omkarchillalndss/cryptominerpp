@@ -1,15 +1,6 @@
 import { Request, Response } from 'express';
 import { User } from '../models/User';
-
-// Generate unique referral code
-const generateReferralCode = (): string => {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let code = '';
-  for (let i = 0; i < 8; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return code;
-};
+import { Referral } from '../models/Referral';
 
 // Apply referral code
 export const applyReferralCode = async (req: Request, res: Response) => {
@@ -17,7 +8,9 @@ export const applyReferralCode = async (req: Request, res: Response) => {
     const { walletAddress, referralCode } = req.body;
 
     if (!walletAddress || !referralCode) {
-      return res.status(400).json({ error: 'Wallet address and referral code required' });
+      return res
+        .status(400)
+        .json({ error: 'Wallet address and referral code required' });
     }
 
     // Find the user who is applying the code
@@ -26,36 +19,57 @@ export const applyReferralCode = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
+    // Find user's referral record
+    const userReferral = await Referral.findOne({ walletAddress });
+    if (!userReferral) {
+      return res.status(404).json({ error: 'Referral record not found' });
+    }
+
     // Check if user has already used a referral code
-    if (user.hasUsedReferralCode) {
-      return res.status(400).json({ error: 'You have already used a referral code' });
+    if (userReferral.hasUsedReferralCode) {
+      return res
+        .status(400)
+        .json({ error: 'You have already used a referral code' });
     }
 
     // Check if user is trying to use their own code
-    if (user.referralCode === referralCode.toUpperCase()) {
-      return res.status(400).json({ error: 'You cannot use your own referral code' });
+    if (userReferral.referralCode === referralCode.toUpperCase()) {
+      return res
+        .status(400)
+        .json({ error: 'You cannot use your own referral code' });
     }
 
-    // Find the user who owns the referral code
-    const referrer = await User.findOne({ referralCode: referralCode.toUpperCase() });
-    if (!referrer) {
+    // Find the referral record of the code owner
+    const referrerReferral = await Referral.findOne({
+      referralCode: referralCode.toUpperCase(),
+    });
+    if (!referrerReferral) {
       return res.status(404).json({ error: 'Invalid referral code' });
+    }
+
+    // Find the referrer user
+    const referrer = await User.findOne({
+      walletAddress: referrerReferral.walletAddress,
+    });
+    if (!referrer) {
+      return res.status(404).json({ error: 'Referrer not found' });
     }
 
     // Award tokens
     const REFERRER_REWARD = 200; // Tokens for code owner
-    const USER_REWARD = 100;     // Tokens for code user
+    const USER_REWARD = 100; // Tokens for code user
 
     // Update referrer (code owner)
-    referrer.totalBalance += REFERRER_REWARD;
-    referrer.referralPoints += REFERRER_REWARD;
-    await referrer.save();
+    referrerReferral.totalBalance += REFERRER_REWARD;
+    referrerReferral.totalReferralPoints += REFERRER_REWARD;
+    referrerReferral.totalReferrals += 1;
+    await referrerReferral.save();
 
     // Update user (code user)
-    user.totalBalance += USER_REWARD;
-    user.hasUsedReferralCode = true;
-    user.usedReferralCode = referralCode.toUpperCase();
-    await user.save();
+    userReferral.totalBalance += USER_REWARD;
+    userReferral.hasUsedReferralCode = true;
+    userReferral.usedReferralCode = referralCode.toUpperCase();
+    await userReferral.save();
 
     console.log(
       `🎁 Referral applied: ${walletAddress} used ${referralCode} | Referrer earned ${REFERRER_REWARD}, User earned ${USER_REWARD}`,
@@ -65,8 +79,8 @@ export const applyReferralCode = async (req: Request, res: Response) => {
       success: true,
       userReward: USER_REWARD,
       referrerReward: REFERRER_REWARD,
-      newBalance: user.totalBalance,
-      message: `Success! You earned ${USER_REWARD} tokens and ${referrer.walletAddress.slice(0, 6)}... earned ${REFERRER_REWARD} tokens!`,
+      newBalance: userReferral.totalBalance,
+      message: `Success! You earned ${USER_REWARD} tokens and ${referrerReferral.walletAddress.slice(0, 6)}... earned ${REFERRER_REWARD} tokens!`,
     });
   } catch (error) {
     console.error('Error applying referral code:', error);
@@ -83,23 +97,23 @@ export const getReferralStats = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Wallet address required' });
     }
 
-    const user = await User.findOne({ walletAddress });
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+    const referral = await Referral.findOne({ walletAddress });
+    if (!referral) {
+      return res.status(404).json({ error: 'Referral record not found' });
     }
 
     // Count how many users used this user's referral code
-    const referralCount = await User.countDocuments({
-      usedReferralCode: user.referralCode,
+    const referralCount = await Referral.countDocuments({
+      usedReferralCode: referral.referralCode,
     });
 
     return res.json({
-      referralCode: user.referralCode,
-      hasUsedReferralCode: user.hasUsedReferralCode,
-      usedReferralCode: user.usedReferralCode,
-      referralPoints: user.referralPoints,
-      referralCount,
-      canUseReferral: !user.hasUsedReferralCode,
+      referralCode: referral.referralCode,
+      hasUsedReferralCode: referral.hasUsedReferralCode,
+      usedReferralCode: referral.usedReferralCode,
+      referralPoints: referral.totalReferralPoints,
+      referralCount: referral.totalReferrals,
+      canUseReferral: !referral.hasUsedReferralCode,
     });
   } catch (error) {
     console.error('Error getting referral stats:', error);

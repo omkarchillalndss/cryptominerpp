@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { MiningSession } from '../models/MiningSession';
 import { User } from '../models/User';
+import { Referral } from '../models/Referral';
 import { computeReward, clampMultiplier } from '../utils/calc';
 
 const MAX_MULTIPLIER = Number(process.env.MAX_MULTIPLIER ?? '6');
@@ -31,9 +32,9 @@ export const start = async (req: Request, res: Response) => {
     // Carry forward totalCoins from previous session
     totalCoins = previousSession.totalCoins;
   } else {
-    // First session: use User's totalBalance if it exists
-    const user = await User.findOne({ walletAddress });
-    totalCoins = user?.totalBalance ?? 0;
+    // First session: use Referral's totalBalance if it exists
+    const referral = await Referral.findOne({ walletAddress });
+    totalCoins = referral?.totalBalance ?? 0;
   }
 
   const now = new Date();
@@ -88,11 +89,11 @@ export const claim = async (req: Request, res: Response) => {
   // Calculate tokens earned in this session
   const awarded = computeReward(elapsedSec, session.multiplier);
 
-  // Update user's total balance (single source of truth)
-  const user = await User.findOneAndUpdate(
+  // Update referral's total balance (single source of truth)
+  const referral = await Referral.findOneAndUpdate(
     { walletAddress },
     { $inc: { totalBalance: awarded } },
-    { new: true, upsert: true },
+    { new: true, upsert: false },
   );
 
   // Update session: when status becomes 'claimed', totalCoins = totalCoins + currentMiningPoints
@@ -101,7 +102,7 @@ export const claim = async (req: Request, res: Response) => {
   session.status = 'claimed';
   await session.save();
 
-  res.json({ awarded, totalBalance: user?.totalBalance ?? awarded });
+  res.json({ awarded, totalBalance: referral?.totalBalance ?? awarded });
 };
 
 // Get current mining session with real-time points

@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { User } from '../models/User';
+import { Referral } from '../models/Referral';
 import { AdReward } from '../models/AdReward';
 
 const MAX_DAILY_CLAIMS = 6;
@@ -56,14 +57,14 @@ export const claimAdReward = async (req: Request, res: Response) => {
     // Get random reward
     const reward = getRandomReward();
 
-    // Update user balance
-    const user = await User.findOne({ walletAddress });
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+    // Update referral balance
+    const referral = await Referral.findOne({ walletAddress });
+    if (!referral) {
+      return res.status(404).json({ error: 'Referral record not found' });
     }
 
-    user.totalBalance += reward;
-    await user.save();
+    referral.totalBalance += reward;
+    await referral.save();
 
     // Create a new entry for this claim
     const adRewardEntry = new AdReward({
@@ -82,7 +83,7 @@ export const claimAdReward = async (req: Request, res: Response) => {
     return res.json({
       success: true,
       reward,
-      newBalance: user.totalBalance,
+      newBalance: referral.totalBalance,
       claimedCount: newClaimsCount,
       remainingClaims: MAX_DAILY_CLAIMS - newClaimsCount,
     });
