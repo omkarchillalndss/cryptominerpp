@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 20 },
     shadowOpacity: 0.5,
     shadowRadius: 40,
-    elevation: 20,
+    // elevation: 20,
   },
   iconContainer: {
     width: 80,
