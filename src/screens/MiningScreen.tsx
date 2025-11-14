@@ -11,6 +11,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import LottieView from 'lottie-react-native';
 import { useMining } from '../contexts/MiningContext';
 import { ProgressBar } from '../components/ProgressBar';
+import { BannerAdComponent } from '../components/BannerAd';
 
 const fmt = (s: number) => {
   const h = Math.floor(s / 3600);
@@ -42,6 +43,9 @@ export default function MiningScreen({ navigation }: any) {
         colors={['#581c87', '#1e3a8a', '#312e81']}
         style={styles.container}
       >
+        {/* Banner Ad at Top */}
+        <BannerAdComponent />
+
         {/* Animated background elements */}
         <View style={styles.bgCircle1} />
         <View style={styles.bgCircle2} />

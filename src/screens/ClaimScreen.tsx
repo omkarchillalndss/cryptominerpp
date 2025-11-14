@@ -3,6 +3,7 @@ import { View, Text, Alert, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import { useMining } from '../contexts/MiningContext';
+import { BannerAdComponent } from '../components/BannerAd';
 
 export default function ClaimScreen({ navigation }: any) {
   const { claimRewards } = useMining();
@@ -26,6 +27,9 @@ export default function ClaimScreen({ navigation }: any) {
         colors={['#064e3b', '#065f46', '#14b8a6']}
         style={styles.container}
       >
+        {/* Banner Ad at Top */}
+        <BannerAdComponent />
+
         {/* Animated background elements */}
         <View style={styles.bgCircle1} />
         <View style={styles.bgCircle2} />

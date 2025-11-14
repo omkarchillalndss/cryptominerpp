@@ -12,6 +12,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import LottieView from 'lottie-react-native';
 import { useMining } from '../contexts/MiningContext';
 import { DurationPopup } from '../components/DurationPopup';
+import { BannerAdComponent } from '../components/BannerAd';
 
 export default function HomeScreen({ navigation }: any) {
   const {
@@ -99,6 +100,9 @@ export default function HomeScreen({ navigation }: any) {
         colors={['#581c87', '#1e3a8a', '#312e81']}
         style={styles.container}
       >
+        {/* Banner Ad at Top */}
+        <BannerAdComponent />
+
         {/* Animated background elements */}
         <View style={styles.bgCircle1} />
         <View style={styles.bgCircle2} />
