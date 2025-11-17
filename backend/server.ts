@@ -9,6 +9,7 @@ import leaderboard from './routes/leaderboard';
 import adRewards from './routes/adRewards';
 import referral from './routes/referral';
 import notification from './routes/notification';
+import admin from './routes/admin';
 
 dotenv.config();
 
@@ -24,6 +25,7 @@ async function main() {
   app.use('/api/ad-rewards', adRewards);
   app.use('/api/referral', referral);
   app.use('/api/notifications', notification);
+  app.use('/api/admin', admin);
   app.get('/health', (_, res) => res.json({ ok: true }));
   const port = Number(process.env.PORT || 3000);
   app.listen(port, () => console.log(`Server listening on :${port} ✅`));
