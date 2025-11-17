@@ -178,20 +178,9 @@ export default function HomeScreen({ navigation }: any) {
               style={styles.balanceCard}
             >
               <View style={styles.cardDecoration} />
-              <Text style={styles.balanceLabel}>Mining Balance</Text>
+              <Text style={styles.balanceLabel}>Mining Balance : </Text>
               <Text style={styles.balanceValue}>{totalBalance.toFixed(4)}</Text>
             </LinearGradient>
-
-            {/* <LinearGradient
-              colors={['#4ade80', '#10b981', '#14b8a6']}
-              style={styles.balanceCard}
-            >
-              <View style={styles.cardDecoration} />
-              <Text style={styles.balanceLabel}>Wallet Balance</Text>
-              <Text style={styles.balanceValue}>
-                {(walletBalance || 0).toFixed(4)}
-              </Text>
-            </LinearGradient> */}
           </View>
 
           {/* Mining Status Card */}
@@ -510,13 +499,14 @@ const styles = StyleSheet.create({
   },
   balancesContainer: {
     flexDirection: 'row',
-    gap: 16,
     marginBottom: 16,
   },
   balanceCard: {
     flex: 1,
+    flexDirection: 'row',
     borderRadius: 16,
-    padding: 16,
+    paddingHorizontal: 25,
+    paddingVertical: 11,
     position: 'relative',
     overflow: 'hidden',
     shadowColor: '#000',
@@ -537,12 +527,11 @@ const styles = StyleSheet.create({
   balanceLabel: {
     color: 'rgba(255, 255, 255, 0.9)',
     fontSize: 18,
-    marginBottom: 4,
   },
   balanceValue: {
     color: '#fff',
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: 20,
+    fontWeight: '900',
   },
   statusCard: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
@@ -560,7 +549,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 9,
   },
   statusTitle: {
     color: '#fff',
@@ -779,7 +768,7 @@ const styles = StyleSheet.create({
     borderRadius: 64,
   },
   startMiningButton: {
-    paddingVertical: 18,
+    paddingVertical: 11,
     alignItems: 'center',
     justifyContent: 'center',
   },
