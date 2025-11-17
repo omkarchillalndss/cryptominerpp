@@ -3,6 +3,7 @@ import { MiningSession } from '../models/MiningSession';
 import { User } from '../models/User';
 import { Referral } from '../models/Referral';
 import { ReferralBonus } from '../models/ReferralBonus';
+import { Notification } from '../models/Notification';
 import { computeReward, clampMultiplier } from '../utils/calc';
 
 const MAX_MULTIPLIER = Number(process.env.MAX_MULTIPLIER ?? '6');
@@ -126,6 +127,22 @@ export const claim = async (req: Request, res: Response) => {
       console.log(
         `🎁 Referral bonus: ${referrer.walletAddress} earned ${bonusAmount} tokens (10% of ${walletAddress}'s ${awarded} tokens)`,
       );
+
+      // Create notification for referrer
+      const shortWallet = walletAddress.length > 10 
+        ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`
+        : walletAddress;
+      await Notification.create({
+        walletAddress: referrer.walletAddress,
+        type: 'mining_bonus',
+        title: '💰 Mining Bonus Earned!',
+        message: `${shortWallet} mined and you earned ${bonusAmount} tokens bonus (10% of ${awarded} tokens).`,
+        data: {
+          referredWallet: walletAddress,
+          bonusAmount,
+          miningReward: awarded,
+        },
+      });
     }
   }
 

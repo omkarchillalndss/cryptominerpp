@@ -13,6 +13,7 @@ import LottieView from 'lottie-react-native';
 import { useMining } from '../contexts/MiningContext';
 import { DurationPopup } from '../components/DurationPopup';
 import { BannerAdComponent } from '../components/BannerAd';
+import { NotificationIcon } from '../components/NotificationIcon';
 
 export default function HomeScreen({ navigation }: any) {
   const {
@@ -34,6 +35,7 @@ export default function HomeScreen({ navigation }: any) {
     remainingClaims: 6,
     canClaim: true,
   });
+  const [notificationKey, setNotificationKey] = useState(0);
 
   const isMining = miningStatus === 'active';
   const canClaim = hasUnclaimedRewards;
@@ -83,11 +85,13 @@ export default function HomeScreen({ navigation }: any) {
     navigation.navigate('AdReward');
   };
 
-  // Refresh ad status when returning to this screen
+  // Refresh ad status, balance, and notifications when returning to this screen
   React.useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       if (walletAddress) {
         fetchAdRewardStatus();
+        refreshBalance(); // Refresh balance to show new referral bonuses
+        setNotificationKey(prev => prev + 1); // Force notification icon to refresh
       }
     });
 
@@ -113,7 +117,7 @@ export default function HomeScreen({ navigation }: any) {
         >
           {/* Header */}
           <View style={styles.header}>
-            {/* Top Buttons Row - Leaderboard and Logout */}
+            {/* Top Buttons Row - Leaderboard, Notifications, and Logout */}
             <View style={styles.topButtonsRow}>
               <TouchableOpacity
                 onPress={() => navigation.navigate('LeaderBoard')}
@@ -123,41 +127,47 @@ export default function HomeScreen({ navigation }: any) {
                 <Text style={styles.leaderboardButtonText}>🏆 Leaderboard</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity
-                onPress={async () => {
-                  if (isMining) {
-                    Alert.alert(
-                      'Logout During Mining',
-                      'Your mining session will continue on the server. You can log back in anytime to check your progress.',
-                      [
-                        {
-                          text: 'Cancel',
-                          style: 'cancel',
-                        },
-                        {
-                          text: 'Logout',
-                          onPress: async () => {
-                            await logout();
-                            navigation.reset({
-                              index: 0,
-                              routes: [{ name: 'Signup' }],
-                            });
+              <View style={styles.rightButtons}>
+                <NotificationIcon
+                  key={notificationKey}
+                  onPress={() => navigation.navigate('Notifications')}
+                />
+                <TouchableOpacity
+                  onPress={async () => {
+                    if (isMining) {
+                      Alert.alert(
+                        'Logout During Mining',
+                        'Your mining session will continue on the server. You can log back in anytime to check your progress.',
+                        [
+                          {
+                            text: 'Cancel',
+                            style: 'cancel',
                           },
-                        },
-                      ],
-                    );
-                  } else {
-                    await logout();
-                    navigation.reset({
-                      index: 0,
-                      routes: [{ name: 'Signup' }],
-                    });
-                  }
-                }}
-                style={styles.logoutButton}
-              >
-                <Text style={styles.logoutButtonText}>🚪 Logout</Text>
-              </TouchableOpacity>
+                          {
+                            text: 'Logout',
+                            onPress: async () => {
+                              await logout();
+                              navigation.reset({
+                                index: 0,
+                                routes: [{ name: 'Signup' }],
+                              });
+                            },
+                          },
+                        ],
+                      );
+                    } else {
+                      await logout();
+                      navigation.reset({
+                        index: 0,
+                        routes: [{ name: 'Signup' }],
+                      });
+                    }
+                  }}
+                  style={styles.logoutButton}
+                >
+                  <Text style={styles.logoutButtonText}>🚪 Logout</Text>
+                </TouchableOpacity>
+              </View>
             </View>
 
             {/* Title and Address - Centered */}
@@ -451,6 +461,10 @@ const styles = StyleSheet.create({
     marginBottom: 11,
     gap: 12,
   },
+  rightButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   leaderboardButton: {
     backgroundColor: 'rgba(245, 158, 11, 0.2)',
     borderWidth: 1,
@@ -489,7 +503,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 20,
-    paddingVertical: 8,
+    paddingVertical: 4,
     paddingHorizontal: 16,
     alignSelf: 'center',
   },

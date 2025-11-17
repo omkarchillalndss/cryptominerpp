@@ -1,7 +1,9 @@
 import axios from 'axios';
-import { API_BASE_URL } from '@env';
+import { API_BASE_URL as ENV_API_BASE_URL } from '@env';
 
-console.log('🌐 API Base URL:', API_BASE_URL);
+console.log('🌐 API Base URL:', ENV_API_BASE_URL);
+
+export const API_BASE_URL = ENV_API_BASE_URL;
 
 export const api = axios.create({
   baseURL: API_BASE_URL,

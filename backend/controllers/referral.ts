@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { User } from '../models/User';
 import { Referral } from '../models/Referral';
 import { ReferralBonus } from '../models/ReferralBonus';
+import { Notification } from '../models/Notification';
 
 // Apply referral code
 export const applyReferralCode = async (req: Request, res: Response) => {
@@ -75,6 +76,22 @@ export const applyReferralCode = async (req: Request, res: Response) => {
     console.log(
       `🎁 Referral applied: ${walletAddress} used ${referralCode} | Referrer earned ${REFERRER_REWARD}, User earned ${USER_REWARD}`,
     );
+
+    // Create notification for referrer
+    const shortWallet = walletAddress.length > 10 
+      ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`
+      : walletAddress;
+    await Notification.create({
+      walletAddress: referrerReferral.walletAddress,
+      type: 'referral_used',
+      title: '🎉 New Referral!',
+      message: `${shortWallet} used your referral code! You earned ${REFERRER_REWARD} tokens.`,
+      data: {
+        referredWallet: walletAddress,
+        reward: REFERRER_REWARD,
+        referralCode: referralCode.toUpperCase(),
+      },
+    });
 
     return res.json({
       success: true,

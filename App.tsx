@@ -12,6 +12,7 @@ import AdScreen from './src/screens/AdScreen';
 import AdRewardScreen from './src/screens/AdRewardScreen';
 import ReferralScreen from './src/screens/ReferralScreen';
 import LeaderBoardScreen from './src/screens/LeaderBoardScreenWrapper';
+import NotificationsScreen from './src/screens/NotificationsScreen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { notificationService } from './src/services/notificationService';
 import notifee from '@notifee/react-native';
@@ -105,6 +106,7 @@ function Root() {
         <Stack.Screen name="AdReward" component={AdRewardScreen} />
         <Stack.Screen name="Referral" component={ReferralScreen} />
         <Stack.Screen name="LeaderBoard" component={LeaderBoardScreen} />
+        <Stack.Screen name="Notifications" component={NotificationsScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
