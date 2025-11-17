@@ -22,11 +22,11 @@ export default function ClaimScreen({ navigation }: any) {
   }, []);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <LinearGradient
-        colors={['#064e3b', '#065f46', '#14b8a6']}
-        style={styles.container}
-      >
+    <LinearGradient
+      colors={['#581c87', '#2e2e81']}
+      style={styles.gradientContainer}
+    >
+      <SafeAreaView style={styles.safeArea}>
         {/* Banner Ad at Top */}
         <BannerAdComponent />
 
@@ -76,21 +76,23 @@ export default function ClaimScreen({ navigation }: any) {
             </LinearGradient>
           </TouchableOpacity>
         </View>
-      </LinearGradient>
-    </SafeAreaView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#064e3b',
-  },
-  container: {
+  gradientContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
+  },
+  safeArea: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
   },
   bgCircle1: {
     position: 'absolute',

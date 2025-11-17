@@ -13,10 +13,7 @@ export default function WalletScreen({ navigation }: any) {
   const { walletAddress, totalBalance } = useMining();
 
   return (
-    <LinearGradient
-      colors={['#581c87', '#1e3a8a', '#312e81']}
-      style={styles.container}
-    >
+    <LinearGradient colors={['#581c87', '#2e2e81']} style={styles.container}>
       {/* Animated background elements */}
       <View style={styles.bgCircle1} />
       <View style={styles.bgCircle2} />

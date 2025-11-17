@@ -38,11 +38,11 @@ export default function MiningScreen({ navigation }: any) {
   const totalReward = effectiveRate * selectedDuration;
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <LinearGradient
-        colors={['#581c87', '#1e3a8a', '#312e81']}
-        style={styles.container}
-      >
+    <LinearGradient
+      colors={['#581c87', '#2e2e81']}
+      style={styles.gradientContainer}
+    >
+      <SafeAreaView style={styles.safeArea}>
         {/* Banner Ad at Top */}
         <BannerAdComponent />
 
@@ -190,17 +190,16 @@ export default function MiningScreen({ navigation }: any) {
             </TouchableOpacity>
           </View>
         </ScrollView>
-      </LinearGradient>
-    </SafeAreaView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  gradientContainer: {
     flex: 1,
-    backgroundColor: '#581c87',
   },
-  container: {
+  safeArea: {
     flex: 1,
   },
   bgCircle1: {

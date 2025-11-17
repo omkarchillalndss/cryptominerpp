@@ -102,11 +102,11 @@ export default function AdScreen({ navigation }: any) {
   }, [adLoaded, adShown]);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <LinearGradient
-        colors={['#581c87', '#1e3a8a', '#312e81']}
-        style={styles.container}
-      >
+    <LinearGradient
+      colors={['#581c87', '#2e2e81']}
+      style={styles.gradientContainer}
+    >
+      <SafeAreaView style={styles.safeArea}>
         {/* Animated background elements */}
         <View style={styles.bgCircle1} />
         <View style={styles.bgCircle2} />
@@ -129,21 +129,23 @@ export default function AdScreen({ navigation }: any) {
             </View>
           )}
         </View>
-      </LinearGradient>
-    </SafeAreaView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#581c87',
-  },
-  container: {
+  gradientContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
+  },
+  safeArea: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
   },
   bgCircle1: {
     position: 'absolute',

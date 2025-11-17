@@ -98,11 +98,11 @@ export default function ReferralScreen({ navigation }: any) {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <LinearGradient
-        colors={['#581c87', '#1e3a8a', '#312e81']}
-        style={styles.container}
-      >
+    <LinearGradient
+      colors={['#581c87', '#2e2e81']}
+      style={styles.gradientContainer}
+    >
+      <SafeAreaView style={styles.safeArea}>
         {/* Background elements */}
         <View style={styles.bgCircle1} />
         <View style={styles.bgCircle2} />
@@ -255,17 +255,16 @@ export default function ReferralScreen({ navigation }: any) {
             </View>
           )}
         </ScrollView>
-      </LinearGradient>
-    </SafeAreaView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  gradientContainer: {
     flex: 1,
-    backgroundColor: '#581c87',
   },
-  container: {
+  safeArea: {
     flex: 1,
   },
   bgCircle1: {

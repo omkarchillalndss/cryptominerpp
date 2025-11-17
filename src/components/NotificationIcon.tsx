@@ -29,8 +29,16 @@ export const NotificationIcon: React.FC<NotificationIconProps> = ({
         true, // unreadOnly
       );
       setUnreadCount(response.unreadCount);
-    } catch (error) {
-      console.error('Failed to fetch unread count:', error);
+    } catch (error: any) {
+      // Silently fail - don't show errors for notification polling
+      // Just log for debugging
+      if (__DEV__) {
+        console.log(
+          'Notification fetch failed (backend may be offline):',
+          error.message,
+        );
+      }
+      // Keep the last known count, don't reset to 0
     }
   };
 

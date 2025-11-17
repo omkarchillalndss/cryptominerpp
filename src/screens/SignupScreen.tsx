@@ -29,11 +29,8 @@ export default function SignupScreen({ navigation }: any) {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <LinearGradient
-        colors={['#581c87', '#1e3a8a', '#312e81']}
-        style={styles.container}
-      >
+    <LinearGradient colors={['#581c87', '#2e2e81']} style={styles.container}>
+      <SafeAreaView style={styles.safeArea}>
         {/* Animated background elements */}
         <View style={styles.bgCircle1} />
         <View style={styles.bgCircle2} />
@@ -81,17 +78,19 @@ export default function SignupScreen({ navigation }: any) {
             </TouchableOpacity>
           </View>
         </View>
-      </LinearGradient>
-    </SafeAreaView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#581c87',
-  },
   container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
+  safeArea: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
