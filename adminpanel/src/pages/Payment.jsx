@@ -104,7 +104,7 @@ function Payment() {
           <span className="text-green-400 font-bold text-lg">
             {(row.balance || 0).toFixed(8)}
           </span>
-          <span className="text-gray-500 text-sm">BTC</span>
+          <span className="text-gray-500 text-sm">Tokens</span>
         </div>
       ),
     },
@@ -227,7 +227,7 @@ function Payment() {
             <p className="text-3xl font-bold text-green-400">
               {totalBalance.toFixed(8)}
             </p>
-            <span className="text-gray-500">BTC</span>
+            <span className="text-gray-500">Tokens</span>
           </div>
         </div>
         <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/5 rounded-2xl p-6 border border-blue-500/20">

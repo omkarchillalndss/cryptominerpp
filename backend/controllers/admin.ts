@@ -56,14 +56,21 @@ export async function getAllUsers(req: Request, res: Response) {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 20;
     const skip = (page - 1) * limit;
+    const search = req.query.search as string;
 
-    const users = await User.find()
+    // Build search query
+    const query: any = {};
+    if (search) {
+      query.walletAddress = { $regex: search, $options: 'i' };
+    }
+
+    const users = await User.find(query)
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .select('-__v');
 
-    const total = await User.countDocuments();
+    const total = await User.countDocuments(query);
 
     // Enrich user data with balance, mining rate, referral code, and status
     const enrichedUsers = await Promise.all(

@@ -8,6 +8,7 @@ function Users() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 20,
@@ -17,7 +18,7 @@ function Users() {
 
   useEffect(() => {
     fetchUsers(pagination.page);
-  }, [pagination.page]);
+  }, [pagination.page, searchQuery]);
 
   const fetchUsers = async (page, isRefresh = false) => {
     if (isRefresh) {
@@ -26,7 +27,11 @@ function Users() {
       setLoading(true);
     }
     try {
-      const response = await adminAPI.getUsers(page, pagination.limit);
+      const response = await adminAPI.getUsers(
+        page,
+        pagination.limit,
+        searchQuery,
+      );
       setUsers(response.data.users);
       setPagination(response.data.pagination);
     } catch (error) {
@@ -39,6 +44,11 @@ function Users() {
 
   const handleRefresh = () => {
     fetchUsers(pagination.page, true);
+  };
+
+  const handleSearch = e => {
+    setSearchQuery(e.target.value);
+    setPagination({ ...pagination, page: 1 }); // Reset to first page on search
   };
 
   const columns = [
@@ -168,8 +178,18 @@ function Users() {
         <input
           type="text"
           placeholder="Search by wallet address..."
+          value={searchQuery}
+          onChange={handleSearch}
           className="w-full bg-[#1a1a1a] border border-[#262626] rounded-xl pl-12 pr-4 py-3.5 text-sm focus:outline-none focus:border-green-500/50 focus:ring-2 focus:ring-green-500/20 transition-all"
         />
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery('')}
+            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
+          >
+            ✕
+          </button>
+        )}
       </div>
 
       {/* Table */}
