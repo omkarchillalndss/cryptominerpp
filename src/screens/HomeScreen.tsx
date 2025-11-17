@@ -511,7 +511,7 @@ const styles = StyleSheet.create({
   balancesContainer: {
     flexDirection: 'row',
     gap: 16,
-    marginBottom: 20,
+    marginBottom: 16,
   },
   balanceCard: {
     flex: 1,
@@ -549,7 +549,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 16,
-    padding: 16,
+    padding: 11,
     marginBottom: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
@@ -585,7 +585,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   statusContent: {
-    paddingVertical: 24,
+    paddingVertical: 10,
   },
   centerContent: {
     alignItems: 'center',
@@ -764,7 +764,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: 16,
-    paddingVertical: 16,
+    paddingVertical: 11,
     paddingHorizontal: 18,
     minHeight: 72,
     overflow: 'hidden',
