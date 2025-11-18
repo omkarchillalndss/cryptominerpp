@@ -39,12 +39,37 @@ export async function getDashboardStats(_req: Request, res: Response) {
 
     const totalBalance = latestSessions[0]?.totalBalance || 0;
 
+    // Calculate average mining rate
+    const activeSessions = await MiningSession.find({ status: 'mining' });
+    const avgMiningRate =
+      activeSessions.length > 0
+        ? activeSessions.reduce((sum, s) => sum + 0.01 * s.multiplier, 0) /
+          activeSessions.length
+        : 0;
+
+    // Count total transactions (mining sessions + payments)
+    const totalMiningSessions = await MiningSession.countDocuments();
+    const totalPayments = await Payment.countDocuments();
+    const totalTransactions = totalMiningSessions + totalPayments;
+
+    // Calculate success rate (claimed sessions / total sessions)
+    const claimedSessions = await MiningSession.countDocuments({
+      status: 'claimed',
+    });
+    const successRate =
+      totalMiningSessions > 0
+        ? (claimedSessions / totalMiningSessions) * 100
+        : 0;
+
     res.json({
       totalUsers,
       activeMiningSessions,
       totalReferrals,
       totalRewardsClaimed,
       totalBalance,
+      avgMiningRate,
+      totalTransactions,
+      successRate,
     });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch dashboard stats' });

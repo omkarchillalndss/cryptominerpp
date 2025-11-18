@@ -27,7 +27,7 @@ function Sidebar() {
       <div className="flex flex-col h-full">
         {/* Logo Section */}
         <div className="p-6 border-b border-[#262626]">
-          <div className="flex items-center gap-3 mb-2">
+          <div className="flex items-center gap-3">
             <div className="relative">
               <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-400 via-green-500 to-teal-600 flex items-center justify-center shadow-lg glow-green">
                 <span className="text-xl font-bold">C</span>

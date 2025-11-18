@@ -18,6 +18,9 @@ function Dashboard() {
     totalReferrals: 0,
     totalRewardsClaimed: 0,
     totalBalance: 0,
+    avgMiningRate: 0,
+    totalTransactions: 0,
+    successRate: 0,
   });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -173,7 +176,7 @@ function Dashboard() {
                 </p>
                 <div className="flex items-baseline gap-3">
                   <h2 className="text-5xl font-bold bg-gradient-to-r from-green-400 to-emerald-500 bg-clip-text text-transparent">
-                    {(stats.totalBalance || 0).toFixed(8)}
+                    {(stats.totalBalance || 0).toFixed(4)}
                   </h2>
                   <span className="text-2xl text-gray-500 font-semibold">
                     Tokens
@@ -201,15 +204,21 @@ function Dashboard() {
           <div className="space-y-4">
             <div className="flex items-center justify-between p-3 bg-[#0f0f0f] rounded-xl border border-[#262626]">
               <span className="text-gray-400 text-sm">Avg. Mining Rate</span>
-              <span className="font-bold text-green-400">0.00012 Tokens/h</span>
+              <span className="font-bold text-green-400">
+                {stats.avgMiningRate.toFixed(4)} BTC/h
+              </span>
             </div>
             <div className="flex items-center justify-between p-3 bg-[#0f0f0f] rounded-xl border border-[#262626]">
               <span className="text-gray-400 text-sm">Total Transactions</span>
-              <span className="font-bold text-blue-400">1,234</span>
+              <span className="font-bold text-blue-400">
+                {stats.totalTransactions.toLocaleString()}
+              </span>
             </div>
             <div className="flex items-center justify-between p-3 bg-[#0f0f0f] rounded-xl border border-[#262626]">
               <span className="text-gray-400 text-sm">Success Rate</span>
-              <span className="font-bold text-purple-400">98.5%</span>
+              <span className="font-bold text-purple-400">
+                {stats.successRate.toFixed(1)}%
+              </span>
             </div>
           </div>
         </div>

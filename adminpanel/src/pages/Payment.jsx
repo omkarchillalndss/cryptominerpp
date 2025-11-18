@@ -114,7 +114,7 @@ function Payment() {
       render: row => (
         <span className="text-gray-300 font-semibold">
           $
-          {((row.balance || 0) * 45000).toLocaleString(undefined, {
+          {((row.balance || 0) * 0.09).toLocaleString(undefined, {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
           })}
@@ -234,7 +234,7 @@ function Payment() {
           <p className="text-gray-400 text-sm mb-2">USD Equivalent</p>
           <div className="flex items-baseline gap-2">
             <p className="text-3xl font-bold text-blue-400">
-              ${(totalBalance * 45000).toLocaleString()}
+              ${(totalBalance * 0.09).toLocaleString()}
             </p>
           </div>
         </div>
